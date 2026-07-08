@@ -17,6 +17,7 @@ class HDFCParser(BaseParser):
         df = pd.read_excel(filepath)
         transactions = []
         for idx, row in df.iterrows():
+            
             date = pd.to_datetime(row['Date']).strftime('%Y-%m-%d')
             desc = str(row['Narration'])
             ref = str(row.get('Chq./Ref.No.', '')) if pd.notna(row.get('Chq./Ref.No.')) else ''

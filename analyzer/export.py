@@ -2,7 +2,35 @@ import openpyxl
 from openpyxl.utils import get_column_letter
 from analyzer.database import get_connection
 
+
+def get_export_summary():
+    conn = get_connection()
+    try:
+        total_transactions = conn.execute("SELECT COUNT(*) AS count FROM transactions").fetchone()["count"]
+        uncategorized = conn.execute(
+            "SELECT COUNT(*) AS count FROM transactions WHERE category IS NULL OR category=''"
+        ).fetchone()["count"]
+        accepted_transfers = conn.execute(
+            "SELECT COUNT(*) AS count FROM matches m JOIN transactions d ON m.debit_txn = d.txn_id JOIN transactions c ON m.credit_txn = c.txn_id WHERE m.status = 'accepted'"
+        ).fetchone()["count"]
+        return {
+            "total_transactions": total_transactions,
+            "uncategorized": uncategorized,
+            "accepted_transfers": accepted_transfers,
+        }
+    finally:
+        conn.close()
+
+
 def export_workbook(output_path: str):
+    conn = get_connection()
+    try:
+        total_transactions = conn.execute("SELECT COUNT(*) AS count FROM transactions").fetchone()["count"]
+        if total_transactions <= 0:
+            raise ValueError("Nothing to export. Import at least one transaction first.")
+    finally:
+        conn.close()
+
     conn = get_connection()
     wb = openpyxl.Workbook()
     # Remove default sheet
@@ -15,6 +43,7 @@ def export_workbook(output_path: str):
         ws = wb.create_sheet(title=title)
         rows = conn.execute(query, params or []).fetchall()
         if not rows:
+            print(f"No data for sheet {title}. Skipping.")
             return
         headers = list(rows[0].keys())
         ws.append(headers)

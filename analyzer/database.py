@@ -1,7 +1,9 @@
-import sqlite3
 import os
+import sqlite3
 
 DB_PATH = "statements.db"
+INPUT_FOLDER = "InputStatements"
+
 
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
@@ -78,3 +80,26 @@ def init_db():
     """)
     conn.commit()
     conn.close()
+
+
+def reset_database(remove_files=False):
+    """Remove all imported transactions and import history, and optionally clear the input files folder."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM manual_overrides")
+    cursor.execute("DELETE FROM matches")
+    cursor.execute("DELETE FROM transactions")
+    cursor.execute("DELETE FROM import_log")
+    cursor.execute("DELETE FROM rules")
+    cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('transactions', 'rules')")
+
+    conn.commit()
+    conn.close()
+
+    if remove_files:
+        if os.path.isdir(INPUT_FOLDER):
+            for file_name in os.listdir(INPUT_FOLDER):
+                file_path = os.path.join(INPUT_FOLDER, file_name)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
