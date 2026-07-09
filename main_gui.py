@@ -1,5 +1,5 @@
-import sys
-from PySide6.QtCore import Qt, Signal
+import sys, os
+from PySide6.QtCore import Qt, Signal, QThread, QObject
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QButtonGroup,
     QDialogButtonBox,
     QAbstractItemView,
+    QProgressDialog,
 )
 from analyzer.database import init_db, get_connection, reset_database
 from analyzer.import_manager import import_file
@@ -30,6 +31,61 @@ from analyzer.export import export_workbook, get_export_summary
 from analyzer.categories import get_existing_categories
 from analyzer.constants import CategoryType, MatchOp
 from analyzer.config import DEFAULT_ACCOUNT
+from analyzer.exceptions import BSAError
+from analyzer.logging_config import logger
+from analyzer.parsers import get_parser_choices
+from analyzer.rule_engine import merge_default_rules
+from analyzer import repository
+
+AUTO_DETECT_LABEL = "Auto-detect (by column match)"
+
+# --- logging -> GUI status bar -------------------------------------------
+import logging
+
+class QtLogHandler(QObject, logging.Handler):
+    message_logged = Signal(str, str)  # level, message
+
+    def __init__(self):
+        QObject.__init__(self)
+        logging.Handler.__init__(self)
+
+    def emit(self, record): # type: ignore[override]
+        self.message_logged.emit(record.levelname, self.format(record))
+
+
+# --- background worker for import + categorize + transfer-match ---------
+class ImportWorker(QThread):
+    progress = Signal(str)
+    finished_ok = Signal(dict)
+    failed = Signal(str)
+
+    def __init__(self, filepaths, account, parser_name):
+        super().__init__()
+        self.filepaths, self.account, self.parser_name = filepaths, account, parser_name
+
+    def run(self):
+        try:
+            for i, filepath in enumerate(self.filepaths, start=1):
+                self.progress.emit(f"Importing {os.path.basename(filepath)} ({i}/{len(self.filepaths)})...")
+                import_file(filepath, account=self.account, parser_name=self.parser_name)
+
+            self.progress.emit("Applying categorization rules...")
+            categorized = apply_rules()
+
+            self.progress.emit("Detecting self-transfers...")
+            transfers = find_transfers()
+
+            self.finished_ok.emit({
+                "imported_files": len(self.filepaths),
+                "categorized": categorized,
+                "transfers_found": len(transfers),
+            })
+        except BSAError as e:
+            logger.warning(f"Import failed: {e}")
+            self.failed.emit(str(e))
+        except Exception as e:
+            logger.exception("Unexpected error during import")
+            self.failed.emit(f"Unexpected error: {e}")
 
 
 def make_button(text, width=None, height=34):
@@ -87,19 +143,7 @@ class TransferTab(QWidget):
         self.refresh()
 
     def refresh(self):
-        conn = get_connection()
-        matches = conn.execute(
-            """
-            SELECT m.match_id, d.txn_date, d.amount,
-                   d.account AS from_acc, c.account AS to_acc,
-                   m.confidence, m.status
-            FROM matches m
-            JOIN transactions d ON m.debit_txn = d.txn_id
-            JOIN transactions c ON m.credit_txn = c.txn_id
-            WHERE m.status = 'suggested'
-            ORDER BY d.txn_date DESC
-            """
-        ).fetchall()
+        matches = repository.get_suggested_matches()
         self.table.setRowCount(len(matches))
         for i, match in enumerate(matches):
             self.table.setItem(i, 0, QTableWidgetItem(match["match_id"]))
@@ -121,21 +165,13 @@ class TransferTab(QWidget):
             action_layout.addWidget(btn_accept)
             action_layout.addWidget(btn_reject)
             self.table.setCellWidget(i, 6, action_widget)
-        conn.close()
 
     def accept_match(self, match_id):
-        conn = get_connection()
-        conn.execute("UPDATE matches SET status='accepted' WHERE match_id=?", (match_id,))
-        conn.commit()
-        conn.close()
+        repository.accept_match(match_id)
         self.refresh()
 
     def reject_match(self, match_id):
-        conn = get_connection()
-        conn.execute("UPDATE matches SET status='rejected' WHERE match_id=?", (match_id,))
-        conn.execute("UPDATE transactions SET match_id=NULL WHERE match_id=?", (match_id,))
-        conn.commit()
-        conn.close()
+        repository.reject_match(match_id)
         self.refresh()
 
 
@@ -222,6 +258,13 @@ class MainWindow(QMainWindow):
 
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
+        qt_log_handler = QtLogHandler()
+        qt_log_handler.setLevel(logging.INFO)
+        logger.addHandler(qt_log_handler)
+        qt_log_handler.message_logged.connect(
+            lambda level, msg: self.statusBar().showMessage(msg, 8000)
+        )
+
     def _on_tab_changed(self, index):
         widget = self.tabs.widget(index)
         if widget is self.review_tab:
@@ -253,9 +296,9 @@ class MainWindow(QMainWindow):
         )
 
 
-class ImportTab(QWidget):
 
-    imported = Signal()   # add this
+class ImportTab(QWidget):
+    imported = Signal()
 
     def __init__(self):
         super().__init__()
@@ -266,6 +309,13 @@ class ImportTab(QWidget):
         intro = QLabel("Import one or more bank statement files and categorize them automatically.")
         intro.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(intro)
+
+        parser_row = QHBoxLayout()
+        parser_row.addWidget(QLabel("Bank format:"))
+        self.parser_combo = QComboBox()
+        self._refresh_parser_choices()
+        parser_row.addWidget(self.parser_combo, stretch=1)
+        layout.addLayout(parser_row)
 
         button_row = QHBoxLayout()
         button_row.addStretch()
@@ -278,15 +328,17 @@ class ImportTab(QWidget):
         action_row = QHBoxLayout()
         self.reset_btn = make_button("Reset Database", width=180, height=34)
         self.reset_btn.clicked.connect(self.reset_database)
+        self.merge_rules_btn = make_button("Reload/Merge Default Rules", width=220, height=34)
+        self.merge_rules_btn.clicked.connect(self.merge_default_rules)
         action_row.addStretch()
         action_row.addWidget(self.reset_btn)
+        action_row.addWidget(self.merge_rules_btn)
         action_row.addStretch()
         layout.addLayout(action_row)
 
         self.file_list_label = QLabel("Imported files")
         self.file_list_label.setStyleSheet("font-weight: 600;")
         layout.addWidget(self.file_list_label)
-
         self.file_list = QListWidget()
         self.file_list.setMaximumHeight(180)
         self.file_list.setAlternatingRowColors(True)
@@ -295,45 +347,73 @@ class ImportTab(QWidget):
 
         self.refresh_imported_files()
 
+    def _refresh_parser_choices(self):
+        self.parser_combo.clear()
+        self.parser_combo.addItem(AUTO_DETECT_LABEL)
+        for name in get_parser_choices():
+            self.parser_combo.addItem(name)
+
     def import_file(self):
-            filepaths, _ = QFileDialog.getOpenFileNames(self, "Select Statements", "", "Excel/CSV (*.xlsx *.csv)")
-            if not filepaths:
-                return
+        filepaths, _ = QFileDialog.getOpenFileNames(self, "Select Statements", "", "Excel/CSV (*.xlsx *.csv)")
+        if not filepaths:
+            return
 
-            account, ok = QInputDialog.getText(
-                self, "Account", "Account name for this import:", text=DEFAULT_ACCOUNT
-            )
-            if not ok or not account.strip():
-                return
-            account = account.strip()
+        account, ok = QInputDialog.getText(self, "Account", "Account name for this import:", text=DEFAULT_ACCOUNT)
+        if not ok or not account.strip():
+            return
+        account = account.strip()
 
-            try:
-                for filepath in filepaths:
-                    # bank_override omitted: each file's own detected parser
-                    # (via discover_parsers/get_parser_for_file) sets the
-                    # correct bank, so mixed-bank batches aren't force-labeled
-                    # "HDFC" anymore.
-                    import_file(filepath, account=account)
-                apply_rules()
-                find_transfers()
-                self.refresh_imported_files()
-                self.imported.emit()
-                QMessageBox.information(self, "Import", f"Imported {len(filepaths)} file(s) and categorized them.")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", str(e))
+        selected = self.parser_combo.currentText()
+        parser_name = None if selected == AUTO_DETECT_LABEL else selected
+
+        self.progress_dialog = QProgressDialog("Starting import...", None, 0, 0, self) #type: ignore
+        self.progress_dialog.setWindowTitle("Importing")
+        self.progress_dialog.setCancelButton(None)
+        self.progress_dialog.setMinimumDuration(0)
+        self.progress_dialog.show()
+        self.btn.setEnabled(False)
+
+        self.worker = ImportWorker(filepaths, account, parser_name)
+        self.worker.progress.connect(self.progress_dialog.setLabelText)
+        self.worker.finished_ok.connect(self._on_import_success)
+        self.worker.failed.connect(self._on_import_failed)
+        self.worker.start()
+
+    def _on_import_success(self, summary):
+        self.progress_dialog.close()
+        self.btn.setEnabled(True)
+        self.refresh_imported_files()
+        self.imported.emit()
+        QMessageBox.information(self, "Import complete",
+            f"Imported {summary['imported_files']} file(s)\n"
+            f"Categorized {summary['categorized']} transaction(s)\n"
+            f"Found {summary['transfers_found']} possible transfer(s)")
+
+    def _on_import_failed(self, message):
+        self.progress_dialog.close()
+        self.btn.setEnabled(True)
+        QMessageBox.critical(self, "Import failed", message)
 
     def refresh_imported_files(self):
         self.file_list.clear()
-        conn = get_connection()
-        rows = conn.execute("SELECT filename FROM import_log ORDER BY imported_at DESC").fetchall()
-        conn.close()
-
+        rows = repository.get_imported_files()
         if not rows:
             self.file_list.addItem("No files imported yet")
             return
-
         for row in rows:
             self.file_list.addItem(row["filename"])
+
+    def merge_default_rules(self):
+        try:
+            count = merge_default_rules()
+            QMessageBox.information(self, "Rules reloaded",
+                f"{count} new rule(s) added from default_rules.json." if count
+                else "No new rules found — everything in the file is already loaded.")
+        except Exception as e:
+            logger.exception("merge_default_rules failed")
+            QMessageBox.critical(self, "Error", str(e))
+    # reset_database(...) unchanged except it should also go through
+    # try/except -> logger.exception, same pattern as above.
 
 # main_gui.py — ImportTab.reset_database
     def reset_database(self):
@@ -503,11 +583,7 @@ class ReviewTab(QWidget):
         self.refresh()
 
     def refresh(self):
-        conn = get_connection()
-        rows = conn.execute(
-            "SELECT txn_id, bank, account, txn_date, description, amount, dr_cr FROM transactions WHERE category IS NULL ORDER BY txn_date DESC"
-        ).fetchall()
-        conn.close()
+        rows = repository.get_uncategorized_transactions()
 
         self.table.setRowCount(len(rows))
         self.table.setColumnCount(8)

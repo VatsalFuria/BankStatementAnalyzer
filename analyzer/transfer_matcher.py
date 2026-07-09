@@ -5,7 +5,7 @@ from analyzer.config import DEFAULT_AMOUNT_TOLERANCE, CONFIDENCE_FULL_MATCH, CON
 from analyzer.constants import DrCr, MatchStatus
 
 
-def find_transfers(new_import_id: str = None, amount_tolerance: float = None):
+def find_transfers(new_import_id: str | None = None, amount_tolerance: float | None = None):
     """
     Find self-transfer pairs across different accounts.
     Matches: same date, same amount (within tolerance), opposite sign (DR vs CR),

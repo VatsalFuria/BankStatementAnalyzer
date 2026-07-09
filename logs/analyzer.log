@@ -1,0 +1,3 @@
+2026-07-09 20:15:09,350 INFO [analyzer] Discovered 2 parser(s): ['Example Complex Bank (template)', 'HDFC']
+2026-07-09 20:16:30,202 INFO [analyzer] Discovered 2 parser(s): ['Example Complex Bank (template)', 'HDFC']
+2026-07-09 20:16:30,386 INFO [analyzer] Imported 7 transaction(s) from D:/VATSAL/BankStatementAnalyzer/InputStatements/sample_hdfc.xlsx (import_id=a15dac51-7b93-4e36-b15d-b8b959ee7baa)

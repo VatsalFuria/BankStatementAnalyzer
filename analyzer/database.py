@@ -2,6 +2,7 @@ import os
 import sqlite3
 
 from analyzer.config import DB_PATH, INPUT_FOLDER
+from contextlib import contextmanager
 
 # DB_PATH / INPUT_FOLDER now live in analyzer/config.py (overridable via
 # BSA_DB_PATH / BSA_INPUT_FOLDER env vars) instead of being fixed constants
@@ -127,3 +128,23 @@ def reset_database(remove_files=False, wipe_rules=False):
                 file_path = os.path.join(INPUT_FOLDER, file_name)
                 if os.path.isfile(file_path):
                     os.remove(file_path)
+
+@contextmanager
+def db_session(commit=True):
+    """
+    Standard try/finally wrapper for every DB access in the app: commits
+    on success, rolls back on any exception, and always closes the
+    connection. Replaces the pattern of hand-rolled try/finally (or no
+    finally at all) scattered across import_manager/rule_engine/etc.,
+    so a connection leak or half-committed write can't happen silently.
+    """
+    conn = get_connection()
+    try:
+        yield conn
+        if commit:
+            conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()

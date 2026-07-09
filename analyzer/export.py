@@ -77,15 +77,11 @@ def export_workbook(output_path: str):
     # Income Summary now driven by rules.category_type instead of a
     # hardcoded category-name tuple: any rule tagged category_type='income'
     # is automatically included, no edit to this file needed.
-    # (Note: manually-overridden categories aren't in `rules`, so purely
-    # manual categorizations won't appear here — a known limitation of
-    # deriving type from the rules table.)
     add_sheet("Income Summary",
               """SELECT t.category, SUM(t.amount) as total
                  FROM transactions t
-                 WHERE t.dr_cr = 'CR' AND t.category IN (
-                     SELECT DISTINCT category FROM rules WHERE category_type = ?
-                 )
+                 JOIN category_types ct ON t.category = ct.category
+                 WHERE t.dr_cr = 'CR' AND ct.category_type = ?
                  GROUP BY t.category""",
               (CategoryType.INCOME.value,))
 
