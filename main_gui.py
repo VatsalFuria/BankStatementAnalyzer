@@ -25,7 +25,16 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QProgressDialog,
 )
+from analyzer.rule_engine import (
+    apply_rules,
+    add_rule,
+    add_manual_override,
+    get_override_priority,
+    seed_default_rules,
+    merge_default_rules,
+)
 from analyzer.database import init_db, get_connection, reset_database
+from analyzer.transfer_matcher import find_transfers
 from analyzer.import_manager import import_file
 from analyzer.export import export_workbook, get_export_summary
 from analyzer.categories import get_existing_categories
@@ -34,7 +43,6 @@ from analyzer.config import DEFAULT_ACCOUNT
 from analyzer.exceptions import BSAError
 from analyzer.logging_config import logger
 from analyzer.parsers import get_parser_choices
-from analyzer.rule_engine import merge_default_rules
 from analyzer import repository
 
 AUTO_DETECT_LABEL = "Auto-detect (by column match)"
@@ -95,14 +103,6 @@ def make_button(text, width=None, height=34):
         button.setMinimumWidth(width)
     return button
 
-from analyzer.rule_engine import (
-    apply_rules,
-    add_rule,
-    add_manual_override,
-    get_override_priority,
-    seed_default_rules,
-)
-from analyzer.transfer_matcher import find_transfers
 
 def ensure_ready():
     """Create tables and seed default rules on first run. Safe to call
@@ -114,6 +114,7 @@ def ensure_ready():
     conn.close()
     if rule_count == 0:
         seed_default_rules()
+
 
 class TransferTab(QWidget):
     def __init__(self):
@@ -296,6 +297,115 @@ class MainWindow(QMainWindow):
         )
 
 
+class FileImportSettingsDialog(QDialog):
+    """
+    Lets the user assign a bank-format parser and an account name to each
+    selected file individually. Needed as soon as you're importing several
+    different banks' (or accounts') statements in a single batch — the old
+    flow forced one parser/account onto every file in the batch.
+    """
+    def __init__(self, filepaths, default_account, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Assign Parser & Account per File")
+        self.setMinimumWidth(680)
+        self.filepaths = filepaths
+        self.result_rows = None
+
+        layout = QVBoxLayout(self)
+
+        hint = QLabel(
+            "Set the bank format and account for each file below. Leave "
+            "'Bank format' on Auto-detect to let the app guess from the "
+            "file's columns."
+        )
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        self.table = QTableWidget()
+        self.table.setRowCount(len(filepaths))
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(["File", "Account", "Bank format"])
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setAlternatingRowColors(True)
+
+        self.account_edits = []
+        self.parser_combos = []
+        parser_names = list(get_parser_choices())
+
+        for i, filepath in enumerate(filepaths):
+            name_item = QTableWidgetItem(os.path.basename(filepath))
+            name_item.setToolTip(filepath)
+            self.table.setItem(i, 0, name_item)
+
+            account_edit = QLineEdit(default_account)
+            self.table.setCellWidget(i, 1, account_edit)
+            self.account_edits.append(account_edit)
+
+            combo = QComboBox()
+            combo.addItem(AUTO_DETECT_LABEL)
+            for name in parser_names:
+                combo.addItem(name)
+            self.table.setCellWidget(i, 2, combo)
+            self.parser_combos.append(combo)
+
+        layout.addWidget(self.table)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(self._on_accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def _on_accept(self):
+        rows = []
+        for filepath, account_edit, combo in zip(self.filepaths, self.account_edits, self.parser_combos):
+            account = account_edit.text().strip()
+            if not account:
+                QMessageBox.warning(self, "Missing account",
+                                     f"Please enter an account name for {os.path.basename(filepath)}.")
+                return
+            selected = combo.currentText()
+            parser_name = None if selected == AUTO_DETECT_LABEL else selected
+            rows.append({"filepath": filepath, "account": account, "parser_name": parser_name})
+        self.result_rows = rows
+        self.accept()
+
+
+class ImportWorker(QThread):
+    progress = Signal(str)
+    finished_ok = Signal(dict)
+    failed = Signal(str)
+
+    def __init__(self, file_settings):
+        """file_settings: list of {"filepath", "account", "parser_name"}."""
+        super().__init__()
+        self.file_settings = file_settings
+
+    def run(self):
+        try:
+            for i, item in enumerate(self.file_settings, start=1):
+                filepath = item["filepath"]
+                self.progress.emit(f"Importing {os.path.basename(filepath)} ({i}/{len(self.file_settings)})...")
+                import_file(filepath, account=item["account"], parser_name=item["parser_name"])
+
+            self.progress.emit("Applying categorization rules...")
+            categorized = apply_rules()
+
+            self.progress.emit("Detecting self-transfers...")
+            transfers = find_transfers()
+
+            self.finished_ok.emit({
+                "imported_files": len(self.file_settings),
+                "categorized": categorized,
+                "transfers_found": len(transfers),
+            })
+        except BSAError as e:
+            logger.warning(f"Import failed: {e}")
+            self.failed.emit(str(e))
+        except Exception as e:
+            logger.exception("Unexpected error during import")
+            self.failed.emit(f"Unexpected error: {e}")
+
 
 class ImportTab(QWidget):
     imported = Signal()
@@ -306,16 +416,13 @@ class ImportTab(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(16)
 
-        intro = QLabel("Import one or more bank statement files and categorize them automatically.")
+        intro = QLabel(
+            "Import one or more bank statement files. You'll choose the "
+            "bank format and account for each file on the next screen."
+        )
         intro.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        intro.setWordWrap(True)
         layout.addWidget(intro)
-
-        parser_row = QHBoxLayout()
-        parser_row.addWidget(QLabel("Bank format:"))
-        self.parser_combo = QComboBox()
-        self._refresh_parser_choices()
-        parser_row.addWidget(self.parser_combo, stretch=1)
-        layout.addLayout(parser_row)
 
         button_row = QHBoxLayout()
         button_row.addStretch()
@@ -347,33 +454,26 @@ class ImportTab(QWidget):
 
         self.refresh_imported_files()
 
-    def _refresh_parser_choices(self):
-        self.parser_combo.clear()
-        self.parser_combo.addItem(AUTO_DETECT_LABEL)
-        for name in get_parser_choices():
-            self.parser_combo.addItem(name)
-
     def import_file(self):
-        filepaths, _ = QFileDialog.getOpenFileNames(self, "Select Statements", "", "Excel/CSV (*.xlsx *.csv)")
+        filepaths, _ = QFileDialog.getOpenFileNames(
+            self, "Select Statements", "", "Excel Files (*.xlsx *.xls)"
+        )
         if not filepaths:
             return
 
-        account, ok = QInputDialog.getText(self, "Account", "Account name for this import:", text=DEFAULT_ACCOUNT)
-        if not ok or not account.strip():
+        dialog = FileImportSettingsDialog(filepaths, DEFAULT_ACCOUNT, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result_rows:
             return
-        account = account.strip()
+        file_settings = dialog.result_rows
 
-        selected = self.parser_combo.currentText()
-        parser_name = None if selected == AUTO_DETECT_LABEL else selected
-
-        self.progress_dialog = QProgressDialog("Starting import...", None, 0, 0, self) #type: ignore
+        self.progress_dialog = QProgressDialog("Starting import...", None, 0, 0, self)  # type: ignore
         self.progress_dialog.setWindowTitle("Importing")
         self.progress_dialog.setCancelButton(None)
         self.progress_dialog.setMinimumDuration(0)
         self.progress_dialog.show()
         self.btn.setEnabled(False)
 
-        self.worker = ImportWorker(filepaths, account, parser_name)
+        self.worker = ImportWorker(file_settings)
         self.worker.progress.connect(self.progress_dialog.setLabelText)
         self.worker.finished_ok.connect(self._on_import_success)
         self.worker.failed.connect(self._on_import_failed)
@@ -412,10 +512,8 @@ class ImportTab(QWidget):
         except Exception as e:
             logger.exception("merge_default_rules failed")
             QMessageBox.critical(self, "Error", str(e))
-    # reset_database(...) unchanged except it should also go through
-    # try/except -> logger.exception, same pattern as above.
 
-# main_gui.py — ImportTab.reset_database
+    # main_gui.py — ImportTab.reset_database
     def reset_database(self):
         confirm = QMessageBox.question(
             self,
@@ -449,6 +547,8 @@ class ImportTab(QWidget):
             QMessageBox.information(self, "Reset complete", "Database cleared successfully.")
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
+
+
 
 class CategorizeDialog(QDialog):
     """
@@ -559,6 +659,7 @@ class CategorizeDialog(QDialog):
         }
         self.accept()
 
+
 class ReviewTab(QWidget):
     def __init__(self):
         super().__init__()
@@ -633,6 +734,7 @@ class ReviewTab(QWidget):
             return
 
         self.refresh()
+
 
 if __name__ == "__main__":
     ensure_ready()

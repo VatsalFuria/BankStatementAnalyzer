@@ -49,11 +49,12 @@ def export_workbook(output_path: str):
         ws.append(headers)
         for row in rows:
             ws.append([row[h] for h in headers])
-        for col_idx, _ in enumerate(headers, 1):
-            col_letter = get_column_letter(col_idx)
-            max_length = max(len(str(row[col_idx-1])) for row in ws.iter_rows(min_row=1, values_only=True))
-            ws.column_dimensions[col_letter].width = min(max_length + 2, 40)
-        ws.auto_filter.ref = ws.dimensions
+
+        # for col_idx, _ in enumerate(headers, 1):
+        #     col_letter = get_column_letter(col_idx)
+        #     max_length = max(len(str(row[col_idx-1])) for row in ws.iter_rows(min_row=1, values_only=True))
+        #     ws.column_dimensions[col_letter].width = min(max_length + 2, 40)
+        # ws.auto_filter.ref = ws.dimensions
         return ws
 
     add_sheet("Consolidated",

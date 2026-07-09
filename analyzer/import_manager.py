@@ -29,8 +29,8 @@ def import_file(filepath: str, bank_override: str | None = None, account: str | 
 
     with db_session(commit=False) as conn:
         existing = conn.execute(
-            "SELECT import_id FROM import_log WHERE filename=? AND bank=? AND account=?",
-            (filepath, bank_override or "", account),
+            "SELECT import_id FROM import_log WHERE filename=? AND account=?",
+            (filepath, account),
         ).fetchone()
     if existing:
         logger.info(f"File {filepath} already imported (import_id={existing['import_id']}). Skipping.")

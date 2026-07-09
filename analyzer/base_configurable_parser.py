@@ -18,7 +18,7 @@ class ConfigurableExcelParser(BaseParser):
         self.display_name = self.config.get("bank_name", type(self).__name__)
 
     def can_parse(self, filepath: str) -> bool:
-        exts = tuple(self.config.get("file_extensions", [".xlsx", ".xls"]))
+        exts = tuple(self.config.get("file_extensions", [".xlsx"]))
         if not filepath.lower().endswith(exts):
             return False
         try:
@@ -45,6 +45,13 @@ class ConfigurableExcelParser(BaseParser):
                 withdraw = parse_amount(row.get(cols["withdrawal"]), filepath=filepath, row=row_num, column=cols["withdrawal"])
                 deposit = parse_amount(row.get(cols["deposit"]), filepath=filepath, row=row_num, column=cols["deposit"])
 
+                if withdraw == 0 and deposit == 0:
+                    # Likely an opening-balance / heading row, not a real
+                    # transaction. Importing it as a 0.0 CR pollutes reports.
+                    logger.info(f"Skipping row {row_num} in {filepath}: no withdrawal or deposit amount")
+                    skipped.append((row_num, "No withdrawal or deposit amount"))
+                    continue
+                
                 closing_raw = row.get(cols.get("balance", ""), None)
                 closing = closing_raw if pd.notna(closing_raw) else None
 

@@ -93,7 +93,9 @@ def apply_manual_overrides():
                 WHERE txn_id = ?
             """, (ov['category'], CategorySource.MANUAL.value, ov['txn_id']))
 
-def add_manual_override(txn_id: int, category: str, category_type: str = "uncategorized", reason: str = "None"):
+def add_manual_override(txn_id: int, category: str,
+                         category_type: str = CategoryType.UNSPECIFIED.value,
+                         reason: str | None = None):
     """
     Categorize a single transaction, independent of any rule. Used by the
     Review tab's "just this transaction" option. Unlike a rule, this never
@@ -176,6 +178,10 @@ def _load_seed_rule_definitions():
         with open(DEFAULT_RULES_FILE, "r", encoding="utf-8") as f:
             rules = json.load(f)
     except FileNotFoundError:
+        logger.warning(
+            f"Default rules file not found at {DEFAULT_RULES_FILE}; "
+            "seeding only the payment-mode Transfer rules."
+        )
         rules = []
 
     next_priority = max((r["priority"] for r in rules), default=0) + 1
