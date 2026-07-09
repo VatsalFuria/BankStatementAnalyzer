@@ -77,6 +77,11 @@ def init_db():
         FOREIGN KEY (debit_txn) REFERENCES transactions(txn_id),
         FOREIGN KEY (credit_txn) REFERENCES transactions(txn_id)
     );
+                         
+    CREATE TABLE IF NOT EXISTS category_types (
+        category      TEXT PRIMARY KEY,
+        category_type TEXT NOT NULL DEFAULT 'unspecified'
+    );
 
     CREATE INDEX IF NOT EXISTS idx_txn_date ON transactions(txn_date);
     CREATE INDEX IF NOT EXISTS idx_txn_account ON transactions(bank, account);
@@ -93,8 +98,12 @@ def init_db():
     conn.close()
 
 
-def reset_database(remove_files=False):
-    """Remove all imported transactions and import history, and optionally clear the input files folder."""
+# analyzer/database.py
+def reset_database(remove_files=False, wipe_rules=False):
+    """Clear one year's transactions/imports/matches for a fresh start.
+    Rules and category_types are KEPT by default (your categorization
+    knowledge carries over year to year); pass wipe_rules=True for a
+    full factory reset."""
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -102,8 +111,12 @@ def reset_database(remove_files=False):
     cursor.execute("DELETE FROM matches")
     cursor.execute("DELETE FROM transactions")
     cursor.execute("DELETE FROM import_log")
-    cursor.execute("DELETE FROM rules")
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('transactions', 'rules')")
+    cursor.execute("DELETE FROM sqlite_sequence WHERE name='transactions'")
+
+    if wipe_rules:
+        cursor.execute("DELETE FROM rules")
+        cursor.execute("DELETE FROM category_types")
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='rules'")
 
     conn.commit()
     conn.close()

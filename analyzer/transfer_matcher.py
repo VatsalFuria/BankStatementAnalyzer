@@ -20,20 +20,20 @@ def find_transfers(new_import_id: str = None, amount_tolerance: float = None):
         debits = conn.execute("""
             SELECT txn_id, account, txn_date, amount, payment_mode, description
             FROM transactions
-            WHERE dr_cr=? AND import_id=?
+            WHERE dr_cr=? AND import_id=? AND match_id IS NULL
         """, (DrCr.DEBIT.value, new_import_id)).fetchall()
         credits = conn.execute("""
             SELECT txn_id, account, txn_date, amount, payment_mode, description
             FROM transactions
-            WHERE dr_cr=? AND import_id=?
+            WHERE dr_cr=? AND import_id=? AND match_id IS NULL
         """, (DrCr.CREDIT.value, new_import_id)).fetchall()
     else:
         debits = conn.execute(
-            "SELECT txn_id, account, txn_date, amount, payment_mode, description FROM transactions WHERE dr_cr=?",
+            "SELECT txn_id, account, txn_date, amount, payment_mode, description FROM transactions WHERE dr_cr=? AND match_id IS NULL",
             (DrCr.DEBIT.value,),
         ).fetchall()
         credits = conn.execute(
-            "SELECT txn_id, account, txn_date, amount, payment_mode, description FROM transactions WHERE dr_cr=?",
+            "SELECT txn_id, account, txn_date, amount, payment_mode, description FROM transactions WHERE dr_cr=? AND match_id IS NULL",
             (DrCr.CREDIT.value,),
         ).fetchall()
 

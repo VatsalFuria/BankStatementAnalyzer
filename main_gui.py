@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -22,10 +22,10 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QButtonGroup,
     QDialogButtonBox,
+    QAbstractItemView,
 )
 from analyzer.database import init_db, get_connection, reset_database
 from analyzer.import_manager import import_file
-from analyzer.rule_engine import apply_rules, add_rule, add_manual_override, get_override_priority
 from analyzer.export import export_workbook, get_export_summary
 from analyzer.categories import get_existing_categories
 from analyzer.constants import CategoryType, MatchOp
@@ -39,6 +39,25 @@ def make_button(text, width=None, height=34):
         button.setMinimumWidth(width)
     return button
 
+from analyzer.rule_engine import (
+    apply_rules,
+    add_rule,
+    add_manual_override,
+    get_override_priority,
+    seed_default_rules,
+)
+from analyzer.transfer_matcher import find_transfers
+
+def ensure_ready():
+    """Create tables and seed default rules on first run. Safe to call
+    every launch — only seeds if the rules table is actually empty, so it
+    replaces having to run setup_db.py by hand."""
+    init_db()
+    conn = get_connection()
+    rule_count = conn.execute("SELECT COUNT(*) AS c FROM rules").fetchone()["c"]
+    conn.close()
+    if rule_count == 0:
+        seed_default_rules()
 
 class TransferTab(QWidget):
     def __init__(self):
@@ -61,8 +80,8 @@ class TransferTab(QWidget):
             ["Match ID", "Date", "Amount", "From Account", "To Account", "Confidence", "Action"]
         )
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         layout.addWidget(self.table)
 
         self.refresh()
@@ -178,11 +197,11 @@ class MainWindow(QMainWindow):
         export_layout.setContentsMargins(16, 16, 16, 16)
         export_layout.setSpacing(16)
         export_label = QLabel("Export your categorized workbook when you're ready.")
-        export_label.setAlignment(Qt.AlignCenter)
+        export_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         export_layout.addWidget(export_label)
 
         self.summary_label = QLabel()
-        self.summary_label.setAlignment(Qt.AlignCenter)
+        self.summary_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.summary_label.setStyleSheet("font-weight: 600;")
         export_layout.addWidget(self.summary_label)
         self.update_export_summary()
@@ -196,6 +215,21 @@ class MainWindow(QMainWindow):
         export_layout.addLayout(button_row)
         export_layout.addStretch()
         self.tabs.addTab(self.export_tab, "Export")
+
+        self.import_tab.imported.connect(self.review_tab.refresh)
+        self.import_tab.imported.connect(self.transfer_tab.refresh)
+        self.import_tab.imported.connect(self.update_export_summary)
+
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+
+    def _on_tab_changed(self, index):
+        widget = self.tabs.widget(index)
+        if widget is self.review_tab:
+            self.review_tab.refresh()
+        elif widget is self.transfer_tab:
+            self.transfer_tab.refresh()
+        elif widget is self.export_tab:
+            self.update_export_summary()
 
     def export(self):
         summary = get_export_summary()
@@ -220,6 +254,9 @@ class MainWindow(QMainWindow):
 
 
 class ImportTab(QWidget):
+
+    imported = Signal()   # add this
+
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
@@ -227,7 +264,7 @@ class ImportTab(QWidget):
         layout.setSpacing(16)
 
         intro = QLabel("Import one or more bank statement files and categorize them automatically.")
-        intro.setAlignment(Qt.AlignCenter)
+        intro.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(intro)
 
         button_row = QHBoxLayout()
@@ -278,7 +315,9 @@ class ImportTab(QWidget):
                     # "HDFC" anymore.
                     import_file(filepath, account=account)
                 apply_rules()
+                find_transfers()
                 self.refresh_imported_files()
+                self.imported.emit()
                 QMessageBox.information(self, "Import", f"Imported {len(filepaths)} file(s) and categorized them.")
             except Exception as e:
                 QMessageBox.critical(self, "Error", str(e))
@@ -296,30 +335,40 @@ class ImportTab(QWidget):
         for row in rows:
             self.file_list.addItem(row["filename"])
 
+# main_gui.py — ImportTab.reset_database
     def reset_database(self):
         confirm = QMessageBox.question(
             self,
-            "Reset database",
-            "This will remove all imported transactions, import history, matches, and rules. Continue?",
-            QMessageBox.Yes | QMessageBox.No,
+            "Reset for new year",
+            "This clears imported transactions, import history, and transfer matches. Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
-        if confirm != QMessageBox.Yes:
+        if confirm != QMessageBox.StandardButton.Yes:
             return
+
+        wipe_rules = QMessageBox.question(
+            self,
+            "Categorization rules",
+            "Also erase your categorization rules and categories?\n"
+            "Choose No to keep what you've built up so far.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        ) == QMessageBox.StandardButton.Yes
 
         remove_files = QMessageBox.question(
             self,
             "Remove input files",
             "Also delete Excel/CSV files from the InputStatements folder?",
-            QMessageBox.Yes | QMessageBox.No,
-        ) == QMessageBox.Yes
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        ) == QMessageBox.StandardButton.Yes
 
         try:
-            reset_database(remove_files=remove_files)
+            reset_database(remove_files=remove_files, wipe_rules=wipe_rules)
+            if wipe_rules:
+                seed_default_rules()
             self.refresh_imported_files()
             QMessageBox.information(self, "Reset complete", "Database cleared successfully.")
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
-
 
 class CategorizeDialog(QDialog):
     """
@@ -398,7 +447,7 @@ class CategorizeDialog(QDialog):
         self.radio_single.toggled.connect(self._update_rule_fields_enabled)
         self._update_rule_fields_enabled()
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -449,7 +498,7 @@ class ReviewTab(QWidget):
 
         self.table = QTableWidget()
         self.table.setAlternatingRowColors(True)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         layout.addWidget(self.table)
         self.refresh()
 
@@ -477,10 +526,12 @@ class ReviewTab(QWidget):
 
     def open_categorize_dialog(self, row):
         dialog = CategorizeDialog(row, self)
-        if dialog.exec() != QDialog.Accepted:
+        if dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
-        result = dialog.result_data
+        result = dialog.result_data or {}
+        if not result:
+            return
         try:
             if result["scope"] == "rule":
                 priority = get_override_priority()
@@ -508,7 +559,7 @@ class ReviewTab(QWidget):
         self.refresh()
 
 if __name__ == "__main__":
-    init_db()
+    ensure_ready()
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
