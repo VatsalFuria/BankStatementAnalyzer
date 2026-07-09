@@ -7,18 +7,29 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QFormLayout,
     QPushButton,
     QFileDialog,
+    QInputDialog,
     QTableWidget,
     QTableWidgetItem,
     QMessageBox,
     QLabel,
     QListWidget,
+    QDialog,
+    QComboBox,
+    QLineEdit,
+    QRadioButton,
+    QButtonGroup,
+    QDialogButtonBox,
 )
 from analyzer.database import init_db, get_connection, reset_database
 from analyzer.import_manager import import_file
-from analyzer.rule_engine import apply_rules
+from analyzer.rule_engine import apply_rules, add_rule, add_manual_override, get_override_priority
 from analyzer.export import export_workbook, get_export_summary
+from analyzer.categories import get_existing_categories
+from analyzer.constants import CategoryType, MatchOp
+from analyzer.config import DEFAULT_ACCOUNT
 
 
 def make_button(text, width=None, height=34):
@@ -248,18 +259,29 @@ class ImportTab(QWidget):
         self.refresh_imported_files()
 
     def import_file(self):
-        filepaths, _ = QFileDialog.getOpenFileNames(self, "Select Statements", "", "Excel/CSV (*.xlsx *.csv)")
-        if not filepaths:
-            return
+            filepaths, _ = QFileDialog.getOpenFileNames(self, "Select Statements", "", "Excel/CSV (*.xlsx *.csv)")
+            if not filepaths:
+                return
 
-        try:
-            for filepath in filepaths:
-                import_file(filepath, bank_override="HDFC", account="Savings")
-            apply_rules()
-            self.refresh_imported_files()
-            QMessageBox.information(self, "Import", f"Imported {len(filepaths)} file(s) and categorized them.")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
+            account, ok = QInputDialog.getText(
+                self, "Account", "Account name for this import:", text=DEFAULT_ACCOUNT
+            )
+            if not ok or not account.strip():
+                return
+            account = account.strip()
+
+            try:
+                for filepath in filepaths:
+                    # bank_override omitted: each file's own detected parser
+                    # (via discover_parsers/get_parser_for_file) sets the
+                    # correct bank, so mixed-bank batches aren't force-labeled
+                    # "HDFC" anymore.
+                    import_file(filepath, account=account)
+                apply_rules()
+                self.refresh_imported_files()
+                QMessageBox.information(self, "Import", f"Imported {len(filepaths)} file(s) and categorized them.")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
 
     def refresh_imported_files(self):
         self.file_list.clear()
@@ -299,6 +321,115 @@ class ImportTab(QWidget):
             QMessageBox.critical(self, "Error", str(e))
 
 
+class CategorizeDialog(QDialog):
+    """
+    Lets the user categorize a single uncategorized transaction, either
+    as a one-off (manual_overrides — affects only this transaction) or
+    as a new rule (rules table — affects this and every future matching
+    transaction). This is the bridge between the Review tab and the
+    rule engine that was previously only reachable from a Python shell.
+    """
+    def __init__(self, txn_row, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Categorize Transaction")
+        self.setMinimumWidth(420)
+        self.txn_row = txn_row
+        self.result_data = None
+
+        layout = QVBoxLayout(self)
+
+        desc_label = QLabel(f"Description:\n{txn_row['description']}")
+        desc_label.setWordWrap(True)
+        desc_label.setStyleSheet("font-weight: 600;")
+        layout.addWidget(desc_label)
+
+        form = QFormLayout()
+
+        self.category_combo = QComboBox()
+        self.category_combo.setEditable(True)
+        self.category_combo.addItems(get_existing_categories())
+        self.category_combo.setCurrentText("")
+        form.addRow("Category:", self.category_combo)
+
+        self.category_type_combo = QComboBox()
+        self.category_type_combo.addItems([t.value for t in CategoryType])
+        self.category_type_combo.setCurrentText(CategoryType.UNSPECIFIED.value)
+        form.addRow("Category type (for reports):", self.category_type_combo)
+
+        layout.addLayout(form)
+
+        scope_label = QLabel("Apply to:")
+        scope_label.setStyleSheet("font-weight: 600; margin-top: 8px;")
+        layout.addWidget(scope_label)
+
+        self.scope_group = QButtonGroup(self)
+        self.radio_single = QRadioButton("Just this transaction")
+        self.radio_rule = QRadioButton("This and all future matching transactions (creates a rule)")
+        self.radio_rule.setChecked(True)
+        self.scope_group.addButton(self.radio_single)
+        self.scope_group.addButton(self.radio_rule)
+        layout.addWidget(self.radio_single)
+        layout.addWidget(self.radio_rule)
+
+        rule_form = QFormLayout()
+        self.match_value_edit = QLineEdit(txn_row["description"])
+        rule_form.addRow("Match text:", self.match_value_edit)
+
+        self.match_op_combo = QComboBox()
+        self.match_op_combo.addItems([op.value for op in MatchOp])
+        self.match_op_combo.setCurrentText(MatchOp.CONTAINS.value)
+        rule_form.addRow("Match type:", self.match_op_combo)
+        layout.addLayout(rule_form)
+
+        hint = QLabel(
+            "Tip: trim the match text down to a stable keyword (e.g. the "
+            "merchant name) — the full description often includes a "
+            "one-time reference number that won't repeat."
+        )
+        hint.setWordWrap(True)
+        hint.setStyleSheet("color: #6b7280; font-size: 9pt;")
+        layout.addWidget(hint)
+
+        self.reason_edit = QLineEdit()
+        reason_form = QFormLayout()
+        reason_form.addRow("Note (optional):", self.reason_edit)
+        layout.addLayout(reason_form)
+
+        self.radio_single.toggled.connect(self._update_rule_fields_enabled)
+        self._update_rule_fields_enabled()
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self._on_accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def _update_rule_fields_enabled(self):
+        is_rule_scope = self.radio_rule.isChecked()
+        self.match_value_edit.setEnabled(is_rule_scope)
+        self.match_op_combo.setEnabled(is_rule_scope)
+        self.reason_edit.setEnabled(not is_rule_scope)
+
+    def _on_accept(self):
+        category = self.category_combo.currentText().strip()
+        if not category:
+            QMessageBox.warning(self, "Missing category", "Please enter a category name.")
+            return
+
+        is_rule_scope = self.radio_rule.isChecked()
+        if is_rule_scope and not self.match_value_edit.text().strip():
+            QMessageBox.warning(self, "Missing match text", "Please enter text to match on.")
+            return
+
+        self.result_data = {
+            "category": category,
+            "category_type": self.category_type_combo.currentText(),
+            "scope": "rule" if is_rule_scope else "single",
+            "match_value": self.match_value_edit.text().strip(),
+            "match_op": self.match_op_combo.currentText(),
+            "reason": self.reason_edit.text().strip() or None,
+        }
+        self.accept()
+
 class ReviewTab(QWidget):
     def __init__(self):
         super().__init__()
@@ -327,15 +458,54 @@ class ReviewTab(QWidget):
         rows = conn.execute(
             "SELECT txn_id, bank, account, txn_date, description, amount, dr_cr FROM transactions WHERE category IS NULL ORDER BY txn_date DESC"
         ).fetchall()
+        conn.close()
+
         self.table.setRowCount(len(rows))
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["ID", "Bank", "Account", "Date", "Description", "Amount", "DR/CR"])
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels(
+            ["ID", "Bank", "Account", "Date", "Description", "Amount", "DR/CR", "Action"]
+        )
         self.table.horizontalHeader().setStretchLastSection(True)
+
         for i, row in enumerate(rows):
             for j, key in enumerate(row.keys()):
                 self.table.setItem(i, j, QTableWidgetItem(str(row[key])))
-        conn.close()
 
+            btn = make_button("Categorize...", width=110, height=28)
+            btn.clicked.connect(lambda checked, r=row: self.open_categorize_dialog(r))
+            self.table.setCellWidget(i, 7, btn)
+
+    def open_categorize_dialog(self, row):
+        dialog = CategorizeDialog(row, self)
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        result = dialog.result_data
+        try:
+            if result["scope"] == "rule":
+                priority = get_override_priority()
+                add_rule(
+                    priority=priority,
+                    match_field="description",
+                    match_op=result["match_op"],
+                    match_value=result["match_value"],
+                    category=result["category"],
+                    category_type=result["category_type"],
+                    source="manual",
+                )
+                apply_rules()
+            else:
+                add_manual_override(
+                    row["txn_id"],
+                    result["category"],
+                    category_type=result["category_type"],
+                    reason=result["reason"],
+                )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+            return
+
+        self.refresh()
 
 if __name__ == "__main__":
     init_db()

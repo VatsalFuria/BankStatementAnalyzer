@@ -1,0 +1,13 @@
+{
+  "bank_name": "HDFC",
+  "file_extensions": [".xlsx", ".xls"],
+  "detect_column": "Narration",
+  "columns": {
+    "date": "Date",
+    "description": "Narration",
+    "reference": "Chq./Ref.No.",
+    "withdrawal": "Withdrawal Amt.",
+    "deposit": "Deposit Amt.",
+    "balance": "Closing Balance"
+  }
+}

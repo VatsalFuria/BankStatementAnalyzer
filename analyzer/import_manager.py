@@ -1,22 +1,27 @@
 import uuid
-import pandas as pd
+from typing import List
+
 from analyzer.database import get_connection
 from analyzer.parsers import discover_parsers, get_parser_for_file
 from analyzer.models import StandardTransaction
-from typing import List
+from analyzer.config import DEFAULT_ACCOUNT, DEFAULT_BANK_OVERRIDE
 
-def import_file(filepath: str, bank_override: str = None, account: str = "Default") -> str:
+
+def import_file(filepath: str, bank_override: str = None, account: str = None) -> str:
     """
     Imports a statement file. Returns import_id.
     Raises ValueError if no parser found.
     """
-    # Ensure parsers are discovered
+    if account is None:
+        account = DEFAULT_ACCOUNT
+    if bank_override is None:
+        bank_override = DEFAULT_BANK_OVERRIDE
+
     if not hasattr(import_file, "_parsers_loaded"):
         discover_parsers()
         import_file._parsers_loaded = True
 
     conn = get_connection()
-    # Check if file already imported (by exact filename)
     existing = conn.execute("SELECT import_id FROM import_log WHERE filename=? AND bank=? AND account=?",
                             (filepath, bank_override or "", account)).fetchone()
     if existing:
@@ -28,6 +33,10 @@ def import_file(filepath: str, bank_override: str = None, account: str = "Defaul
         raise ValueError(f"No parser found for file: {filepath}")
 
     transactions: List[StandardTransaction] = parser.parse(filepath)
+    # bank_override, when explicitly given, forcibly overwrites the bank
+    # the parser detected — useful for bulk imports known to be one bank.
+    # Left as None by default, so multi-bank folders get labeled correctly
+    # via each file's own detected parser instead of being mislabeled.
     if bank_override:
         for txn in transactions:
             txn.bank = bank_override
@@ -36,7 +45,6 @@ def import_file(filepath: str, bank_override: str = None, account: str = "Defaul
 
     import_id = str(uuid.uuid4())
     cursor = conn.cursor()
-    # Insert into DB
     for txn in transactions:
         cursor.execute("""
             INSERT INTO transactions
@@ -49,7 +57,6 @@ def import_file(filepath: str, bank_override: str = None, account: str = "Defaul
             txn.source_file, txn.source_row
         ))
 
-    # Log import
     cursor.execute("""
         INSERT INTO import_log (import_id, filename, bank, account, row_count)
         VALUES (?, ?, ?, ?, ?)

@@ -1,8 +1,11 @@
 import os
 import sqlite3
 
-DB_PATH = "statements.db"
-INPUT_FOLDER = "InputStatements"
+from analyzer.config import DB_PATH, INPUT_FOLDER
+
+# DB_PATH / INPUT_FOLDER now live in analyzer/config.py (overridable via
+# BSA_DB_PATH / BSA_INPUT_FOLDER env vars) instead of being fixed constants
+# here.
 
 
 def get_connection() -> sqlite3.Connection:
@@ -47,14 +50,15 @@ def init_db():
     );
 
     CREATE TABLE IF NOT EXISTS rules (
-        id           INTEGER PRIMARY KEY AUTOINCREMENT,
-        priority     INTEGER NOT NULL,
-        match_field  TEXT NOT NULL,
-        match_op     TEXT NOT NULL,
-        match_value  TEXT NOT NULL,
-        category     TEXT NOT NULL,
-        source       TEXT NOT NULL DEFAULT 'manual',
-        created_at   TEXT DEFAULT CURRENT_TIMESTAMP
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        priority      INTEGER NOT NULL,
+        match_field   TEXT NOT NULL,
+        match_op      TEXT NOT NULL,
+        match_value   TEXT NOT NULL,
+        category      TEXT NOT NULL,
+        category_type TEXT NOT NULL DEFAULT 'unspecified',
+        source        TEXT NOT NULL DEFAULT 'manual',
+        created_at    TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS manual_overrides (
@@ -79,6 +83,13 @@ def init_db():
     CREATE INDEX IF NOT EXISTS idx_txn_category ON transactions(category);
     """)
     conn.commit()
+
+    # Lightweight migration for DBs created before category_type existed.
+    existing_cols = [row["name"] for row in conn.execute("PRAGMA table_info(rules)").fetchall()]
+    if "category_type" not in existing_cols:
+        conn.execute("ALTER TABLE rules ADD COLUMN category_type TEXT NOT NULL DEFAULT 'unspecified'")
+        conn.commit()
+
     conn.close()
 
 

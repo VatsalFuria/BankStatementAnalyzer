@@ -1,0 +1,9 @@
+[
+  {"priority": 1, "match_field": "description", "match_op": "contains", "match_value": "SALARY", "category": "Salary", "category_type": "income"},
+  {"priority": 2, "match_field": "description", "match_op": "contains", "match_value": "INT.PD", "category": "Savings Interest", "category_type": "income"},
+  {"priority": 3, "match_field": "description", "match_op": "contains", "match_value": "FD INT", "category": "FD Interest", "category_type": "income"},
+  {"priority": 4, "match_field": "description", "match_op": "contains", "match_value": "SWIGGY", "category": "Food", "category_type": "expense"},
+  {"priority": 5, "match_field": "description", "match_op": "contains", "match_value": "ZOMATO", "category": "Food", "category_type": "expense"},
+  {"priority": 6, "match_field": "description", "match_op": "contains", "match_value": "AMAZON", "category": "Shopping", "category_type": "expense"},
+  {"priority": 7, "match_field": "description", "match_op": "contains", "match_value": "FLIPKART", "category": "Shopping", "category_type": "expense"}
+]

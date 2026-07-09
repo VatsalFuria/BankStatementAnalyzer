@@ -15,7 +15,12 @@ def discover_parsers():
         module = importlib.import_module(f"analyzer.parsers.{module_name}")
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
-            if isinstance(attr, type) and issubclass(attr, BaseParser) and attr is not BaseParser:
+            if (
+                isinstance(attr, type)
+                and issubclass(attr, BaseParser)
+                and attr is not BaseParser
+                and attr.__module__ == module.__name__  # only classes defined *in this module*, not imported base classes
+            ):
                 _parsers.append(attr())
     return _parsers
 
