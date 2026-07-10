@@ -1,0 +1,36 @@
+QPushButton {
+    min-height: 32px;
+    min-width: 120px;
+    padding: 6px 14px;
+    border: 1px solid #9aa5b1;
+    border-radius: 4px;
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+QPushButton:hover { background-color: #e5edff; }
+QPushButton:pressed { background-color: #cfe0ff; }
+QPushButton:disabled { color: #9ca3af; background-color: #f9fafb; }
+
+/* set via widget.setProperty("destructive", True) for Reset/Reject actions */
+QPushButton[destructive="true"] {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+QPushButton[destructive="true"]:hover { background-color: #fecaca; }
+
+QTabBar::tab { min-height: 28px; padding: 6px 14px; }
+
+QTableWidget { gridline-color: #d0d0d0; alternate-background-color: #f7f8fa; }
+QHeaderView::section {
+    padding: 4px;
+    font-weight: 600;
+    background-color: #eef1f5;
+    border: none;
+    border-bottom: 1px solid #d0d0d0;
+}
+
+/* persistent status indicator in the status bar */
+QLabel#statusOk    { color: #15803d; }
+QLabel#statusBusy  { color: #92400e; font-weight: 600; }
+QLabel#statusError { color: #b91c1c; font-weight: 600; }

@@ -51,7 +51,7 @@ def apply_rules(transaction_list=None):
     Returns number of newly categorized rows.
     """
     rules = load_rules()
-    with db_session(commit=False) as conn:
+    with db_session(commit=True) as conn:
         if transaction_list is None:
             txns = conn.execute("""
                 SELECT txn_id, description, bank, reference FROM transactions

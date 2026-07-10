@@ -42,12 +42,13 @@ This tool helps you:
 
 | File                                          | Role                                                                                                                                                                                 |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **analyzer/parsers/base_parser.py**           | Abstract `BaseParser`; also defines `is_template` so example/scaffold parsers can be excluded from discovery                                                                         |
+| **analyzer/parsers/base_parser.py**           | Abstract `BaseParser`;  
+                                                                  |
 | **analyzer/parsers/**init**.py**              | Parser discovery (`discover_parsers()`, `get_parser_for_file()`, `get_parser_choices()`)                                                                                             |
 | **analyzer/base_configurable_parser.py**      | JSON-config-driven Excel parser used by most banks (see `parsers/bank_formats/*.json`)                                                                                               |
 | **analyzer/parsers/hdfc_parser.py**           | HDFC-specific `ConfigurableExcelParser` subclass, pointed at `hdfc.json`                                                                                                             |
 | **analyzer/parsers/bank_formats/hdfc.json**   | Column mapping for HDFC's Excel export                                                                                                                                               |
-| **analyzer/parsers/example_custom_parser.py** | Template for banks whose export doesn't fit the simple config format (merged cells, shifting columns). Marked `is_template = True` so it never appears as a real, selectable format. |
+| **analyzer/parsers/example_custom_parser.py** | Template for banks whose export doesn't fit the simple config format (merged cells, shifting columns) |
 | **analyzer/utils.py**                         | `parse_amount()` — tolerant numeric parsing for messy bank export cells                                                                                                              |
 | **analyzer/import_manager.py**                | Orchestrates parsing, per-file/account dedup, and bulk insert                                                                                                                        |
 
@@ -183,7 +184,7 @@ class MyBankParser(ConfigurableExcelParser):
 
 It'll be auto-discovered and appear in each file's format dropdown on next launch.
 
-For statements with merged cells or shifting columns, copy `analyzer/parsers/example_custom_parser.py` instead and adapt it — it's excluded from discovery via `is_template = True`, so remove that line once you've turned it into a real parser.
+For statements with merged cells or shifting columns, copy `analyzer/parsers/example_custom_parser.py` instead and adapt it 
 
 **CSV support:** no CSV parser exists yet. To add one, implement `BaseParser.can_parse`/`parse` using `pd.read_csv` instead of `pd.read_excel`.
 
@@ -215,7 +216,7 @@ add_rule(
 ## Recent Fixes
 
 - **Duplicate-import detection** was comparing the wrong bank value and never actually caught re-imports of the same file; now keyed on filename + account.
-- **Example/template parser** (`example_custom_parser.py`) was showing up as a real, selectable bank format; now excluded via `is_template`.
+- **Example/template parser** (`example_custom_parser.py`) was showing up as a real, selectable bank format; currently ignored.
 - **Manual-override defaults** (`category_type="uncategorized"`, `reason="None"`) didn't match the app's enum or database null semantics; fixed to `CategoryType.UNSPECIFIED` and `None`.
 - **File picker** allowed selecting unsupported `.csv` and didn't allow `.xls`, despite HDFC's config declaring `.xls` support; filter now matches reality, and `xlrd` was added to `requirements.txt` for legacy `.xls` files.
 - **Export sheet generation** recomputed column widths by rescanning the whole worksheet once per column; now computed in a single pass. Empty sheets (e.g. no uncategorized transactions) are removed instead of left blank in the workbook.
