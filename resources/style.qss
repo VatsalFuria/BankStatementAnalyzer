@@ -1,36 +1,128 @@
+/* -------------------- General -------------------- */
+
+QWidget {
+    background-color: #202124;
+    color: #e8eaed;
+}
+
+/* -------------------- Buttons -------------------- */
+
 QPushButton {
     min-height: 32px;
     min-width: 120px;
     padding: 6px 14px;
-    border: 1px solid #9aa5b1;
+
+    background-color: #303134;
+    color: #e8eaed;
+
+    border: 1px solid #5f6368;
     border-radius: 4px;
-    background-color: #f3f4f6;
-    color: #1f2937;
 }
-QPushButton:hover { background-color: #e5edff; }
-QPushButton:pressed { background-color: #cfe0ff; }
-QPushButton:disabled { color: #9ca3af; background-color: #f9fafb; }
 
-/* set via widget.setProperty("destructive", True) for Reset/Reject actions */
+QPushButton:hover {
+    background-color: #3c4043;
+}
+
+QPushButton:pressed {
+    background-color: #4a4d52;
+}
+
+QPushButton:disabled {
+    background-color: #2a2b2d;
+    color: #80868b;
+    border-color: #3c4043;
+}
+
+/* Reset / Reject buttons */
+
 QPushButton[destructive="true"] {
-    background-color: #fee2e2;
-    color: #991b1b;
-    border-color: #fca5a5;
+    background-color: #5f2120;
+    color: #ffffff;
+    border-color: #b3261e;
 }
-QPushButton[destructive="true"]:hover { background-color: #fecaca; }
 
-QTabBar::tab { min-height: 28px; padding: 6px 14px; }
+QPushButton[destructive="true"]:hover {
+    background-color: #7f2b29;
+}
 
-QTableWidget { gridline-color: #d0d0d0; alternate-background-color: #f7f8fa; }
+/* -------------------- Tabs -------------------- */
+
+QTabBar::tab {
+    min-height: 28px;
+    padding: 6px 14px;
+
+    background: #303134;
+    color: #e8eaed;
+    border: 1px solid #5f6368;
+}
+
+QTabBar::tab:selected {
+    background: #3c4043;
+}
+
+QTabBar::tab:hover {
+    background: #45484d;
+}
+
+/* -------------------- Tables -------------------- */
+
+QTableWidget {
+    background-color: #202124;
+    color: #e8eaed;
+
+    alternate-background-color: #2b2d30;
+    gridline-color: #3c4043;
+
+    selection-background-color: #3b82f6;
+    selection-color: #ffffff;
+}
+
+QTableWidget::item {
+    background: transparent;
+    color: #e8eaed;
+}
+
+QTableWidget::item:selected {
+    background-color: #3b82f6;
+    color: #ffffff;
+}
+
 QHeaderView::section {
-    padding: 4px;
+    background-color: #303134;
+    color: #e8eaed;
+
+    padding: 6px;
     font-weight: 600;
-    background-color: #eef1f5;
+
     border: none;
-    border-bottom: 1px solid #d0d0d0;
+    border-bottom: 1px solid #3c4043;
+    border-right: 1px solid #3c4043;
 }
 
-/* persistent status indicator in the status bar */
-QLabel#statusOk    { color: #15803d; }
-QLabel#statusBusy  { color: #92400e; font-weight: 600; }
-QLabel#statusError { color: #b91c1c; font-weight: 600; }
+QTableCornerButton::section {
+    background-color: #303134;
+    border: none;
+    border-bottom: 1px solid #3c4043;
+    border-right: 1px solid #3c4043;
+}
+
+/* -------------------- Status Bar -------------------- */
+
+QStatusBar {
+    background-color: #202124;
+    color: #e8eaed;
+}
+
+QLabel#statusOk {
+    color: #34d399;
+}
+
+QLabel#statusBusy {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+QLabel#statusError {
+    color: #f87171;
+    font-weight: 600;
+}

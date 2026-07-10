@@ -138,6 +138,19 @@ class ImportTab(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(16)
 
+        # Grid instead of a manually-stretched QHBoxLayout — stays aligned
+        # if a third/fourth action button gets added later.
+        action_grid = QGridLayout()
+        action_grid.setHorizontalSpacing(12)
+        self.reset_btn = make_button("Reset Database", width=180, height=34, destructive=True)
+        self.reset_btn.clicked.connect(self.reset_database)
+        self.merge_rules_btn = make_button("Reload/Merge Default Rules", width=220, height=34)
+        self.merge_rules_btn.clicked.connect(self.merge_default_rules)
+        action_grid.addWidget(self.reset_btn, 0, 0)
+        action_grid.addWidget(self.merge_rules_btn, 0, 1)
+        action_grid.setColumnStretch(2, 1)
+        layout.addLayout(action_grid)
+
         intro = QLabel(
             "Import one or more bank statement files. You'll choose the "
             "bank format and account for each file on the next screen."
@@ -154,18 +167,7 @@ class ImportTab(QWidget):
         button_row.addStretch()
         layout.addLayout(button_row)
 
-        # Grid instead of a manually-stretched QHBoxLayout — stays aligned
-        # if a third/fourth action button gets added later.
-        action_grid = QGridLayout()
-        action_grid.setHorizontalSpacing(12)
-        self.reset_btn = make_button("Reset Database", width=180, height=34, destructive=True)
-        self.reset_btn.clicked.connect(self.reset_database)
-        self.merge_rules_btn = make_button("Reload/Merge Default Rules", width=220, height=34)
-        self.merge_rules_btn.clicked.connect(self.merge_default_rules)
-        action_grid.addWidget(self.reset_btn, 0, 0)
-        action_grid.addWidget(self.merge_rules_btn, 0, 1)
-        action_grid.setColumnStretch(2, 1)
-        layout.addLayout(action_grid)
+
 
         self.file_list_label = QLabel("Imported files")
         self.file_list_label.setStyleSheet("font-weight: 600;")
@@ -192,11 +194,6 @@ class ImportTab(QWidget):
         if not filepaths:
             return
 
-        dialog = FileImportSettingsDialog(filepaths, DEFAULT_ACCOUNT, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result_rows:
-            return
-        file_settings = dialog.result_rows
-
         self.progress_dialog = QProgressDialog("Starting import...", None, 0, 0, self)  # type: ignore
         self.progress_dialog.setWindowTitle("Importing")
         self.progress_dialog.setCancelButton(None)
@@ -205,6 +202,11 @@ class ImportTab(QWidget):
         self._set_actions_enabled(False)
         if self.status_bar:
             self.status_bar.set_busy("Importing...")
+
+        dialog = FileImportSettingsDialog(filepaths, DEFAULT_ACCOUNT, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result_rows:
+            return
+        file_settings = dialog.result_rows
 
         self.worker = ImportWorker(file_settings)
         self.worker.progress.connect(self._on_progress)
