@@ -70,6 +70,10 @@ def apply_rules(transaction_list=None):
     """
     rules = load_rules()
     with db_session(commit=True) as conn:
+
+        if transaction_list is not None and not transaction_list:
+            return 0
+
         if transaction_list is None:
             # Re-apply rules to all non-manuall transactions
             txns = conn.execute("""
@@ -77,7 +81,16 @@ def apply_rules(transaction_list=None):
                 WHERE category IS NULL OR category_src != ?
             """, (CategorySource.MANUAL.value,)).fetchall()
         else:
-            txns = transaction_list
+            placeholders = ",".join("?" * len(transaction_list))
+            txns = conn.execute(
+                f"""
+                SELECT txn_id, description, bank, reference
+                FROM transactions
+                WHERE txn_id IN ({placeholders})
+                AND (category IS NULL OR category_src != ?)
+                """,
+                (*transaction_list, CategorySource.MANUAL.value),
+            ).fetchall()
 
         count = 0
         for txn in txns:

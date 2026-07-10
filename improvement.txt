@@ -1,11 +1,5 @@
 • Findings
 
-  - /D:/VATSAL/BankStatementAnalyzer/analyzer/transfer_matcher.py:43: Transfer detection is O(debits * credits) and loads all unmatched transactions into
-    memory. This will slow down sharply as imported statements grow; filter/group candidates in SQL by date, amount range, and opposite dr_cr.
-
-  - /D:/VATSAL/BankStatementAnalyzer/analyzer/rule_engine.py:64: Rule application is O(transactions * rules) in Python. With many transactions/rules this
-    becomes expensive; consider SQL-backed matching where possible, batching updates, or indexing normalized fields.
-
   - /D:/VATSAL/BankStatementAnalyzer/main_gui.py:652: Review refresh loads every uncategorized transaction into a QTableWidget at once. This will become
     sluggish with large datasets; add pagination, search/filtering, or lazy table models.
 
@@ -17,27 +11,3 @@
 
   - /D:/VATSAL/BankStatementAnalyzer/analyzer/export.py:66: Export uses SELECT * for bank sheets. This couples output to schema order and future columns;
     explicit columns are more maintainable.
-
-  - /D:/VATSAL/BankStatementAnalyzer/analyzer/repository.py:51: LIMIT is string-appended after int(limit). It avoids direct SQL injection, but query
-    construction is still inconsistent; use parameterized SQL or fixed repository methods.
-
-  - /D:/VATSAL/BankStatementAnalyzer/analyzer/database.py:87: Index coverage is limited. Common queries also filter/join on import_id, match_id, dr_cr,
-    matches.status, and rules.priority; missing indexes will matter as data grows.
-
-  
-  I’m reviewing the database access paths in the app and the current repository/GUI queries for obvious inefficiencies or correctness issues before suggesting or applying changes.
-
-## SQL review summary
-
-The current SQL is acceptable for a small local dataset, but there are three clear improvements worth making:
-
-- transfer_matcher.py is doing a nested scan over debits and credits, which becomes $O(n^2)$ as imports grow. A join-based query on date, amount, and payment mode would be much faster and simpler to reason about.
-- export.py makes several separate count queries for the export summary. Those can be collapsed into one aggregate query so the app does less work per export.
-- repository.py currently treats only `NULL` as uncategorized, while the export logic also treats empty strings as uncategorized. That mismatch can leave rows invisible in the review UI. The filter should be `category IS NULL OR category=''`.
-
-### Small but useful follow-up
-I would also add a couple of targeted indexes in database.py for the transaction lookups used by imports, transfer matching, and reviews:
-- `(import_id, dr_cr, match_id)`
-- `(category, txn_date)`
-
-If you want, I can turn this into the actual patch next.

@@ -11,7 +11,7 @@ from typing import List, Optional
 _parsers_loaded = False
 
 def import_file(filepath: str, bank_override: str | None = None, account: str | None = None,
-                 parser_name: Optional[str] = None):
+                 parser_name: Optional[str] = None) -> tuple:
     """
     parser_name: explicit choice from the GUI dropdown (or CLI). When
     given, that parser is used regardless of auto-detection — the user's
@@ -31,7 +31,7 @@ def import_file(filepath: str, bank_override: str | None = None, account: str | 
     existing = repository.get_import_by_filename_and_account(filepath, account)
     if existing:
         logger.info(f"File {filepath} already imported (import_id={existing['import_id']}). Skipping.")
-        return existing["import_id"]
+        return existing["import_id"], []
 
     if parser_name:
         parser = get_parser_by_name(parser_name)
@@ -56,7 +56,7 @@ def import_file(filepath: str, bank_override: str | None = None, account: str | 
 
     if not transactions:
         logger.warning(f"No transactions found in {filepath}. Nothing to import.")
-        return ""
+        return None, []
 
     if bank_override:
         for txn in transactions:
