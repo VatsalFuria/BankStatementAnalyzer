@@ -104,16 +104,21 @@ class ImportWorker(QThread):
 
     def run(self):
         try:
+            txn_ids = []
+            import_ids = []
             for i, item in enumerate(self.file_settings, start=1):
                 filepath = item["filepath"]
                 self.progress.emit(f"Importing {os.path.basename(filepath)} ({i}/{len(self.file_settings)})...")
-                import_file(filepath, account=item["account"], parser_name=item["parser_name"])
+                fileImportId, fileTxnIds = import_file(filepath, account=item["account"], parser_name=item["parser_name"])
+                txn_ids.extend(fileTxnIds)
+                import_ids.extend(fileImportId)
 
             self.progress.emit("Applying categorization rules...")
-            categorized = apply_rules()
+            categorized = apply_rules(txn_ids)
 
             self.progress.emit("Detecting self-transfers...")
             transfers = find_transfers()
+            # fileImportId not being passed to enable cross import transfer matching
 
             self.finished_ok.emit({
                 "imported_files": len(self.file_settings),
@@ -188,11 +193,20 @@ class ImportTab(QWidget):
         self.merge_rules_btn.setEnabled(enabled)
 
     def import_file(self):
+
+        if self.status_bar:
+            self.status_bar.set_busy("Importing...")
+
         filepaths, _ = QFileDialog.getOpenFileNames(
             self, "Select Statements", "", "Excel Files (*.xlsx *.xls)"
         )
         if not filepaths:
             return
+        
+        dialog = FileImportSettingsDialog(filepaths, DEFAULT_ACCOUNT, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result_rows:
+            return
+        file_settings = dialog.result_rows
 
         self.progress_dialog = QProgressDialog("Starting import...", None, 0, 0, self)  # type: ignore
         self.progress_dialog.setWindowTitle("Importing")
@@ -200,13 +214,6 @@ class ImportTab(QWidget):
         self.progress_dialog.setMinimumDuration(0)
         self.progress_dialog.show()
         self._set_actions_enabled(False)
-        if self.status_bar:
-            self.status_bar.set_busy("Importing...")
-
-        dialog = FileImportSettingsDialog(filepaths, DEFAULT_ACCOUNT, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result_rows:
-            return
-        file_settings = dialog.result_rows
 
         self.worker = ImportWorker(file_settings)
         self.worker.progress.connect(self._on_progress)

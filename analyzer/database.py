@@ -87,6 +87,16 @@ def init_db():
     CREATE INDEX IF NOT EXISTS idx_txn_date ON transactions(txn_date);
     CREATE INDEX IF NOT EXISTS idx_txn_account ON transactions(bank, account);
     CREATE INDEX IF NOT EXISTS idx_txn_category ON transactions(category);
+                         
+    CREATE INDEX IF NOT EXISTS idx_import_log_file_account ON import_log(filename, account);
+                         
+    CREATE INDEX IF NOT EXISTS idx_txn_unmatched ON transactions(dr_cr, import_id) WHERE match_id IS NULL;
+                
+    CREATE INDEX IF NOT EXISTS idx_matches_debit ON matches(debit_txn);
+    CREATE INDEX IF NOT EXISTS idx_matches_credit ON matches(credit_txn);
+    CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
+                         
+                         
     """)
     conn.commit()
     conn.close()

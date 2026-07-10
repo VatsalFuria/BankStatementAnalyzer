@@ -11,7 +11,7 @@ from typing import List, Optional
 _parsers_loaded = False
 
 def import_file(filepath: str, bank_override: str | None = None, account: str | None = None,
-                 parser_name: Optional[str] = None) -> str:
+                 parser_name: Optional[str] = None):
     """
     parser_name: explicit choice from the GUI dropdown (or CLI). When
     given, that parser is used regardless of auto-detection — the user's
@@ -66,6 +66,6 @@ def import_file(filepath: str, bank_override: str | None = None, account: str | 
 
     import_id = str(uuid.uuid4())
 
-    repository.put_transactions(import_id, filepath, account, transactions)
+    txn_ids = repository.put_transactions(import_id, filepath, account, transactions)
     logger.info(f"Imported {len(transactions)} transaction(s) from {filepath} (import_id={import_id})")
-    return import_id
+    return import_id, txn_ids

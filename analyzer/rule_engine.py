@@ -6,6 +6,7 @@ from analyzer.config import DEFAULT_RULES_FILE
 from analyzer.constants import MatchOp, CategorySource, CategoryType, PAYMENT_MODE_KEYWORDS
 from analyzer.categories import set_category_type
 from analyzer.logging_config import logger
+from analyzer.database import db_session
 
 """
 Inefficiencies, identified.. should be corrected if an easy fix, ignored till now.
@@ -13,16 +14,29 @@ Inefficiencies, identified.. should be corrected if an easy fix, ignored till no
 
 def load_rules():
     """Return rules sorted by priority."""
-    conn = get_connection()
-    rows = conn.execute("SELECT * FROM rules ORDER BY priority ASC").fetchall()
-    conn.close()
-    return rows
+    with db_session(commit=False) as conn:
+        rows = conn.execute("SELECT * FROM rules ORDER BY priority ASC").fetchall()
+    rules = []
+    for r in rows:
+        rule = dict(r)
+        rule['match_value'] = rule['match_value'].upper()
+        if(rule["match_op"]==MatchOp.REGEX.value):
+            try:
+                re.compile(r["match_value"])
+            except re.error:
+                logger.error("Invalid regex: %r", r["match_value"])
+                continue
+        
+        rules.append(rule)
+
+    return rules
 
 def test_rule(rule: dict, transaction: dict) -> bool:
     """Check if a single rule matches a transaction (row from DB)."""
     match_field = rule['match_field']
     match_op = rule['match_op']
     match_value = rule['match_value']
+
     if match_field == 'description':
         text = transaction['description'] or ''
     elif match_field == 'bank':
@@ -33,19 +47,19 @@ def test_rule(rule: dict, transaction: dict) -> bool:
         return False
 
     text = str(text).upper()
-    value = match_value.upper()
+    # value = match_value.upper() Handled in load_rules()
 
     if match_op == MatchOp.CONTAINS.value:
-        return value in text
+        return match_value in text
     elif match_op == MatchOp.STARTSWITH.value:
-        return text.startswith(value)
+        return text.startswith(match_value)
     elif match_op == MatchOp.REGEX.value:
         try:
             return bool(re.search(match_value, text, re.IGNORECASE))
         except re.error:
             return False
     elif match_op == MatchOp.EQUALS.value:
-        return text == value
+        return text == match_value
     return False
 
 def apply_rules(transaction_list=None):
@@ -57,6 +71,7 @@ def apply_rules(transaction_list=None):
     rules = load_rules()
     with db_session(commit=True) as conn:
         if transaction_list is None:
+            # Re-apply rules to all non-manuall transactions
             txns = conn.execute("""
                 SELECT txn_id, description, bank, reference FROM transactions
                 WHERE category IS NULL OR category_src != ?

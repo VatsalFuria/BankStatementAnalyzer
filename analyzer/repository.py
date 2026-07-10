@@ -62,6 +62,7 @@ def get_import_by_filename_and_account(filename, account):
 def put_transactions(import_id, filename, account, transactions):
     with db_session() as conn:
         cursor = conn.cursor()
+        txn_ids = []
         for txn in transactions:
             cursor.execute("""
                 INSERT INTO transactions
@@ -71,7 +72,9 @@ def put_transactions(import_id, filename, account, transactions):
             """, (import_id, txn.bank, txn.account, txn.txn_date, txn.description,
                   txn.amount, txn.dr_cr, txn.balance, txn.reference, txn.payment_mode,
                   txn.source_file, txn.source_row))
+            txn_ids.append(cursor.lastrowid)
         cursor.execute("""
             INSERT INTO import_log (import_id, filename, bank, account, row_count)
             VALUES (?, ?, ?, ?, ?)
         """, (import_id, filename, transactions[0].bank, account, len(transactions)))
+    return txn_ids

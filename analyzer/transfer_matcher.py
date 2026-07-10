@@ -16,6 +16,8 @@ def find_transfers(new_import_id: str | None = None, amount_tolerance: float | N
         amount_tolerance = DEFAULT_AMOUNT_TOLERANCE
 
     conn = get_connection()
+    """ We'll tend to not use importid since cross import matching is importtant. Else all files will have to imported in the same importId
+    """
     if new_import_id:
         debits = conn.execute("""
             SELECT txn_id, account, txn_date, amount, payment_mode, description
