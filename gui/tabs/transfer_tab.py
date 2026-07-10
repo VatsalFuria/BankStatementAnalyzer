@@ -48,14 +48,15 @@ class TransferTab(QWidget):
             action_layout.setContentsMargins(0, 0, 0, 0)
             action_layout.setSpacing(6)
 
-            btn_accept = make_button("Accept", width=80, height=28)
-            btn_reject = make_button("Reject", width=80, height=28, destructive=True)
+            btn_accept = make_button("Accept", width=80, height=28, compact=True)
+            btn_reject = make_button("Reject", width=80, height=28, destructive=True, compact=True)
             btn_accept.clicked.connect(lambda checked, m=match: self.accept_match(m["match_id"]))
             btn_reject.clicked.connect(lambda checked, m=match: self.reject_match(m["match_id"]))
 
             action_layout.addWidget(btn_accept)
             action_layout.addWidget(btn_reject)
             self.table.setCellWidget(i, 6, action_widget)
+        self.table.resizeRowsToContents()
 
     def accept_match(self, match_id):
         repository.accept_match(match_id)

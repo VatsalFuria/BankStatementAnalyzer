@@ -155,9 +155,10 @@ class ReviewTab(QWidget):
             for j, key in enumerate(row.keys()):
                 self.table.setItem(i, j, QTableWidgetItem(str(row[key])))
 
-            btn = make_button("Categorize...", width=110, height=18)
+            btn = make_button("Categorize...", width=110, height=24, compact=True)
             btn.clicked.connect(lambda checked, r=row: self.open_categorize_dialog(r))
             self.table.setCellWidget(i, 7, btn)
+        self.table.resizeRowsToContents()
 
     def open_categorize_dialog(self, row):
         dialog = CategorizeDialog(row, self)

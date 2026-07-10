@@ -7,6 +7,10 @@ from analyzer.constants import MatchOp, CategorySource, CategoryType, PAYMENT_MO
 from analyzer.categories import set_category_type
 from analyzer.logging_config import logger
 
+"""
+Inefficiencies, identified.. should be corrected if an easy fix, ignored till now.
+"""
+
 def load_rules():
     """Return rules sorted by priority."""
     conn = get_connection()

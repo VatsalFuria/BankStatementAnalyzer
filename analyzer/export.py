@@ -3,6 +3,7 @@ from openpyxl.utils import get_column_letter
 from analyzer.database import db_session
 from analyzer.constants import MatchStatus, CategoryType
 from analyzer.logging_config import logger
+from analyzer import repository
 
 
 def get_export_summary():
@@ -96,10 +97,12 @@ def export_workbook(output_path: str):
                 "   WHERE category IS NOT NULL GROUP BY category, dr_cr")
         
         add_sheet("Category Type Summary",
-                """SELECT t.category, SUM(t.amount) as total
+                """SELECT ct.category_type, t.dr_cr, COUNT(*) as count, SUM(t.amount) as total
                     FROM transactions t
                     JOIN category_types ct ON t.category = ct.category
-                    GROUP BY t.category""")
+                    WHERE t.category IS NOT NULL AND t.category != ''
+                    GROUP BY ct.category_type, t.dr_cr
+                    ORDER BY ct.category_type, t.dr_cr""")
 
         wb.save(output_path)
         

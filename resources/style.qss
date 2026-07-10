@@ -33,6 +33,15 @@ QPushButton:disabled {
     border-color: #3c4043;
 }
 
+/* Compact buttons used inside table cells (Review/Transfer action columns).
+   Overrides the base QPushButton min-height/min-width so these don't get
+   forced to 32px and overflow into the next row. */
+QPushButton[compact="true"] {
+    min-height: 0px;
+    min-width: 0px;
+    padding: 2px 8px;
+}
+
 /* Reset / Reject buttons */
 
 QPushButton[destructive="true"] {
