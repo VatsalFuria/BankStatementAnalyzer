@@ -89,13 +89,6 @@ def init_db():
     CREATE INDEX IF NOT EXISTS idx_txn_category ON transactions(category);
     """)
     conn.commit()
-
-    # Lightweight migration for DBs created before category_type existed.
-    existing_cols = [row["name"] for row in conn.execute("PRAGMA table_info(rules)").fetchall()]
-    if "category_type" not in existing_cols:
-        conn.execute("ALTER TABLE rules ADD COLUMN category_type TEXT NOT NULL DEFAULT 'unspecified'")
-        conn.commit()
-
     conn.close()
 
 

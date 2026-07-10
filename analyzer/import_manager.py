@@ -4,6 +4,7 @@ from analyzer.models import StandardTransaction
 from analyzer.config import DEFAULT_ACCOUNT, DEFAULT_BANK_OVERRIDE
 from analyzer.exceptions import ParserNotFoundError
 from analyzer.logging_config import logger
+from analyzer import repository
 import uuid
 from typing import List, Optional
 
@@ -21,17 +22,13 @@ def import_file(filepath: str, bank_override: str | None = None, account: str | 
     global _parsers_loaded
     if account is None:
         account = DEFAULT_ACCOUNT
-    if bank_override is None:
-        bank_override = DEFAULT_BANK_OVERRIDE
+    # if bank_override is None:
+    #     bank_override = DEFAULT_BANK_OVERRIDE
     if not _parsers_loaded:
         discover_parsers()
         _parsers_loaded = True
 
-    with db_session(commit=False) as conn:
-        existing = conn.execute(
-            "SELECT import_id FROM import_log WHERE filename=? AND account=?",
-            (filepath, account),
-        ).fetchone()
+    existing = repository.get_import_by_filename_and_account(filepath, account)
     if existing:
         logger.info(f"File {filepath} already imported (import_id={existing['import_id']}). Skipping.")
         return existing["import_id"]
@@ -52,9 +49,14 @@ def import_file(filepath: str, bank_override: str | None = None, account: str | 
             )
 
     transactions: List[StandardTransaction] = parser.parse(filepath)
+
     skipped_rows = getattr(parser, "last_skipped_rows", [])
     if skipped_rows:
         logger.warning(f"{filepath}: {len(skipped_rows)} row(s) skipped due to parse errors: {skipped_rows}")
+
+    if not transactions:
+        logger.warning(f"No transactions found in {filepath}. Nothing to import.")
+        return ""
 
     if bank_override:
         for txn in transactions:
@@ -63,22 +65,7 @@ def import_file(filepath: str, bank_override: str | None = None, account: str | 
         txn.account = account
 
     import_id = str(uuid.uuid4())
-    with db_session() as conn:
-        cursor = conn.cursor()
-        for txn in transactions:
-            cursor.execute("""
-                INSERT INTO transactions
-                (import_id, bank, account, txn_date, description, amount, dr_cr,
-                 balance, reference, payment_mode, source_file, source_row)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (import_id, txn.bank, txn.account, txn.txn_date, txn.description,
-                  txn.amount, txn.dr_cr, txn.balance, txn.reference, txn.payment_mode,
-                  txn.source_file, txn.source_row))
-        cursor.execute("""
-            INSERT INTO import_log (import_id, filename, bank, account, row_count)
-            VALUES (?, ?, ?, ?, ?)
-        """, (import_id, filepath, transactions[0].bank if transactions else bank_override,
-              account, len(transactions)))
 
+    repository.put_transactions(import_id, filepath, account, transactions)
     logger.info(f"Imported {len(transactions)} transaction(s) from {filepath} (import_id={import_id})")
     return import_id

@@ -61,41 +61,6 @@ class QtLogHandler(QObject, logging.Handler):
         self.message_logged.emit(record.levelname, self.format(record))
 
 
-# --- background worker for import + categorize + transfer-match ---------
-class ImportWorker(QThread):
-    progress = Signal(str)
-    finished_ok = Signal(dict)
-    failed = Signal(str)
-
-    def __init__(self, filepaths, account, parser_name):
-        super().__init__()
-        self.filepaths, self.account, self.parser_name = filepaths, account, parser_name
-
-    def run(self):
-        try:
-            for i, filepath in enumerate(self.filepaths, start=1):
-                self.progress.emit(f"Importing {os.path.basename(filepath)} ({i}/{len(self.filepaths)})...")
-                import_file(filepath, account=self.account, parser_name=self.parser_name)
-
-            self.progress.emit("Applying categorization rules...")
-            categorized = apply_rules()
-
-            self.progress.emit("Detecting self-transfers...")
-            transfers = find_transfers()
-
-            self.finished_ok.emit({
-                "imported_files": len(self.filepaths),
-                "categorized": categorized,
-                "transfers_found": len(transfers),
-            })
-        except BSAError as e:
-            logger.warning(f"Import failed: {e}")
-            self.failed.emit(str(e))
-        except Exception as e:
-            logger.exception("Unexpected error during import")
-            self.failed.emit(f"Unexpected error: {e}")
-
-
 def make_button(text, width=None, height=34):
     button = QPushButton(text)
     button.setMinimumHeight(height)

@@ -30,8 +30,20 @@ class MatchOp(str, Enum):
 
 class CategoryType(str, Enum):
     """Groups categories for reporting (e.g. the Income Summary sheet)."""
-    INCOME = "income"
-    EXPENSE = "expense"
+    INCOME_DEFAULT = "income"
+    INCOME_SALARY = "income_salary"
+    INCOME_HOUSE = "income_house"
+    INCOME_OTHER = "income_other_sources"
+    CAPITAL_GAINS = "income_capital_gains"
+    PROFIT_GAINS_BUSINESS_PROFESSION = "income_pgbp"
+    INVESTMENT_80C = "investment_80c"
+    HEALTH_INSURANCE_80D = "health_insurance_80d"
+    EDUCATION_LOAN_80E = "education_loan_80e"
+    DONATION_80G = "donation_80g"
+    GIFT_RECEIVED = "gift_received"
+    GIFT_GIVEN = "gift_given"
+    FRIENDLY_LOAN = "friendly_loan"
+    PERSONAL_EXPENSE = "expense"
     TRANSFER = "transfer"
     UNSPECIFIED = "unspecified"
 

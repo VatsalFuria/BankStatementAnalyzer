@@ -18,7 +18,7 @@ DEFAULT_RULES_FILE = os.environ.get(
 )
 
 # --- Import defaults -----------------------------------------------------
-DEFAULT_ACCOUNT = os.environ.get("BSA_DEFAULT_ACCOUNT", "Default")
+DEFAULT_ACCOUNT = os.environ.get("BSA_DEFAULT_ACCOUNT", "Default_account")
 # None => parser-detected bank name is authoritative unless a caller
 # explicitly forces an override (e.g. bulk-importing a folder known to be
 # all one bank).

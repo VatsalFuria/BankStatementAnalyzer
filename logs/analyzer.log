@@ -4,3 +4,12 @@
 2026-07-09 21:36:22,440 INFO [analyzer] Discovered 2 parser(s): ['Example Complex Bank (template)', 'HDFC']
 2026-07-09 21:36:25,054 INFO [analyzer] merge_default_rules: inserted 0 new rule(s)
 2026-07-09 21:36:36,879 INFO [analyzer] merge_default_rules: inserted 0 new rule(s)
+2026-07-09 22:30:09,802 INFO [analyzer] Discovered 2 parser(s): ['Example Complex Bank (template)', 'HDFC']
+2026-07-09 22:30:40,664 INFO [analyzer] Discovered 2 parser(s): ['Example Complex Bank (template)', 'HDFC']
+2026-07-09 22:30:41,768 INFO [analyzer] Imported 7 transaction(s) from D:/VATSAL/BankStatementAnalyzer/InputStatements/sample_hdfc.xlsx (import_id=bdbc0e90-a8d8-493d-9df1-0b3898005a9f)
+2026-07-09 22:31:28,823 INFO [analyzer] merge_default_rules: inserted 0 new rule(s)
+2026-07-09 22:34:02,977 INFO [analyzer] Imported 7 transaction(s) from D:/VATSAL/BankStatementAnalyzer/InputStatements/sample_hdfc.xlsx (import_id=618adbfb-8925-4fcc-88c3-0f02e2705173)
+2026-07-10 03:01:18,841 INFO [analyzer] Discovered 2 parser(s): ['Example Complex Bank (template)', 'HDFC']
+2026-07-10 03:01:47,123 INFO [analyzer] Discovered 2 parser(s): ['Example Complex Bank (template)', 'HDFC']
+2026-07-10 03:16:01,563 INFO [analyzer] Imported 7 transaction(s) from D:/VATSAL/BankStatementAnalyzer/InputStatements/sample_hdfc.xlsx (import_id=f5e7ec76-f645-4d34-ab00-0a3130cff24a)
+2026-07-10 03:16:01,793 INFO [analyzer] apply_rules: categorized 21 transaction(s) using 12 rule(s)

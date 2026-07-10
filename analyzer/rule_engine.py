@@ -51,7 +51,7 @@ def apply_rules(transaction_list=None):
     Returns number of newly categorized rows.
     """
     rules = load_rules()
-    with db_session() as conn:
+    with db_session(commit=False) as conn:
         if transaction_list is None:
             txns = conn.execute("""
                 SELECT txn_id, description, bank, reference FROM transactions
@@ -71,6 +71,7 @@ def apply_rules(transaction_list=None):
                     """, (rule['category'], CategorySource.RULE.value, rule['id'], txn['txn_id']))
                     count += 1
                     break
+    logger.info(f"apply_rules: categorized {count} transaction(s) using {len(rules)} rule(s)")
     return count
 
 def reapply_all_rules():

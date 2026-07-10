@@ -51,3 +51,27 @@ def get_transactions_display(limit=None):
         query += f" LIMIT {int(limit)}"
     with db_session(commit=False) as conn:
         return conn.execute(query).fetchall()
+    
+def get_import_by_filename_and_account(filename, account):
+    with db_session(commit=False) as conn:
+        return conn.execute(
+            "SELECT import_id FROM import_log WHERE filename=? AND account=?",
+            (filename, account),
+        ).fetchone()
+    
+def put_transactions(import_id, filename, account, transactions):
+    with db_session() as conn:
+        cursor = conn.cursor()
+        for txn in transactions:
+            cursor.execute("""
+                INSERT INTO transactions
+                (import_id, bank, account, txn_date, description, amount, dr_cr,
+                 balance, reference, payment_mode, source_file, source_row)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (import_id, txn.bank, txn.account, txn.txn_date, txn.description,
+                  txn.amount, txn.dr_cr, txn.balance, txn.reference, txn.payment_mode,
+                  txn.source_file, txn.source_row))
+        cursor.execute("""
+            INSERT INTO import_log (import_id, filename, bank, account, row_count)
+            VALUES (?, ?, ?, ?, ?)
+        """, (import_id, filename, transactions[0].bank, account, len(transactions)))

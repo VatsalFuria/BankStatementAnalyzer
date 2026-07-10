@@ -51,7 +51,7 @@ class ConfigurableExcelParser(BaseParser):
                     logger.info(f"Skipping row {row_num} in {filepath}: no withdrawal or deposit amount")
                     skipped.append((row_num, "No withdrawal or deposit amount"))
                     continue
-                
+
                 closing_raw = row.get(cols.get("balance", ""), None)
                 closing = closing_raw if pd.notna(closing_raw) else None
 
