@@ -148,7 +148,8 @@ def find_transfers(new_import_id: str | None = None, amount_tolerance: float | N
         used_credits.add(c_id)
 
         match_id = str(uuid.uuid4())
-        match_rows.append((match_id, d_id, c_id, score, MatchStatus.SUGGESTED.value))
+        reason_text = "; ".join(reasons)
+        match_rows.append((match_id, d_id, c_id, score, MatchStatus.SUGGESTED.value, reason_text))
         debit_updates.append((match_id, d_id))
         credit_updates.append((match_id, c_id))
         results.append({
@@ -158,7 +159,7 @@ def find_transfers(new_import_id: str | None = None, amount_tolerance: float | N
 
     with db_session() as conn:
         conn.executemany(
-            "INSERT INTO matches (match_id, debit_txn, credit_txn, confidence, status) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO matches (match_id, debit_txn, credit_txn, confidence, status, reason) VALUES (?, ?, ?, ?, ?, ?)",
             match_rows,
         )
         conn.executemany("UPDATE transactions SET match_id=? WHERE txn_id=?", debit_updates)

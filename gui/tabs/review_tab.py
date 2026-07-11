@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 
 from analyzer.rule_engine import add_rule, add_manual_override, get_override_priority, apply_rules
 from analyzer.categories import get_existing_categories
-from analyzer.constants import CategoryType, MatchOp
+from analyzer.constants import CategoryType, MatchOp, DrCr
 from analyzer import repository
 from gui.widgets import make_button
 
@@ -66,6 +66,13 @@ class CategorizeDialog(QDialog):
         self.match_op_combo.addItems([op.value for op in MatchOp])
         self.match_op_combo.setCurrentText(MatchOp.CONTAINS.value)
         rule_form.addRow("Match type:", self.match_op_combo)
+
+        self.dr_cr_combo = QComboBox()
+        self.dr_cr_combo.addItems(["Any", "DR only (debit)", "CR only (credit)"])
+        default_label = "DR only (debit)" if txn_row["dr_cr"] == DrCr.DEBIT.value else "CR only (credit)"
+        self.dr_cr_combo.setCurrentText(default_label)
+        rule_form.addRow("Applies to:", self.dr_cr_combo)
+
         layout.addLayout(rule_form)
 
         hint = QLabel(
@@ -94,6 +101,7 @@ class CategorizeDialog(QDialog):
         is_rule_scope = self.radio_rule.isChecked()
         self.match_value_edit.setEnabled(is_rule_scope)
         self.match_op_combo.setEnabled(is_rule_scope)
+        self.dr_cr_combo.setEnabled(is_rule_scope)
         self.reason_edit.setEnabled(not is_rule_scope)
 
     def _on_accept(self):
@@ -106,6 +114,12 @@ class CategorizeDialog(QDialog):
         if is_rule_scope and not self.match_value_edit.text().strip():
             QMessageBox.warning(self, "Missing match text", "Please enter text to match on.")
             return
+        
+        dr_cr_map = {
+            "Any": None,
+            "DR only (debit)": DrCr.DEBIT.value,
+            "CR only (credit)": DrCr.CREDIT.value,
+        }
 
         self.result_data = {
             "category": category,
@@ -113,6 +127,7 @@ class CategorizeDialog(QDialog):
             "scope": "rule" if is_rule_scope else "single",
             "match_value": self.match_value_edit.text().strip(),
             "match_op": self.match_op_combo.currentText(),
+            "dr_cr": dr_cr_map[self.dr_cr_combo.currentText()] if is_rule_scope else None,
             "reason": self.reason_edit.text().strip() or None,
         }
         self.accept()
@@ -179,6 +194,7 @@ class ReviewTab(QWidget):
                     category=result["category"],
                     category_type=result["category_type"],
                     source="manual",
+                    dr_cr=result["dr_cr"],
                 )
                 apply_rules()
             else:

@@ -21,7 +21,8 @@ def get_suggested_matches():
         return conn.execute("""
             SELECT m.match_id, d.txn_date, d.amount,
                    d.account AS from_acc, c.account AS to_acc,
-                   m.confidence, m.status
+                   d.description AS debit_desc, c.description AS credit_desc,
+                   m.confidence, m.status, m.reason
             FROM matches m
             JOIN transactions d ON m.debit_txn = d.txn_id
             JOIN transactions c ON m.credit_txn = c.txn_id

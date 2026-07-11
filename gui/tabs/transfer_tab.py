@@ -21,9 +21,10 @@ class TransferTab(QWidget):
 
         self.table = QTableWidget()
         self.table.setAlternatingRowColors(True)
-        self.table.setColumnCount(7)
+        self.table.setColumnCount(9)
         self.table.setHorizontalHeaderLabels(
-            ["Match ID", "Date", "Amount", "From Account", "To Account", "Confidence", "Action"]
+            ["Date", "Amount", "From Account", "To Account",
+             "Debit Description", "Credit Description", "Confidence", "Reason", "Action"]
         )
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -36,12 +37,14 @@ class TransferTab(QWidget):
         matches = repository.get_suggested_matches()
         self.table.setRowCount(len(matches))
         for i, match in enumerate(matches):
-            self.table.setItem(i, 0, QTableWidgetItem(match["match_id"]))
-            self.table.setItem(i, 1, QTableWidgetItem(match["txn_date"]))
-            self.table.setItem(i, 2, QTableWidgetItem(str(match["amount"])))
-            self.table.setItem(i, 3, QTableWidgetItem(match["from_acc"]))
-            self.table.setItem(i, 4, QTableWidgetItem(match["to_acc"]))
-            self.table.setItem(i, 5, QTableWidgetItem(str(match["confidence"]) + "%"))
+            self.table.setItem(i, 0, QTableWidgetItem(match["txn_date"]))
+            self.table.setItem(i, 1, QTableWidgetItem(str(match["amount"])))
+            self.table.setItem(i, 2, QTableWidgetItem(match["from_acc"]))
+            self.table.setItem(i, 3, QTableWidgetItem(match["to_acc"]))
+            self.table.setItem(i, 4, QTableWidgetItem(match["debit_desc"]))
+            self.table.setItem(i, 5, QTableWidgetItem(match["credit_desc"]))
+            self.table.setItem(i, 6, QTableWidgetItem(str(match["confidence"]) + "%"))
+            self.table.setItem(i, 7, QTableWidgetItem(match["reason"] or ""))
 
             action_widget = QWidget()
             action_layout = QHBoxLayout(action_widget)
@@ -55,7 +58,7 @@ class TransferTab(QWidget):
 
             action_layout.addWidget(btn_accept)
             action_layout.addWidget(btn_reject)
-            self.table.setCellWidget(i, 6, action_widget)
+            self.table.setCellWidget(i, 8, action_widget)
         self.table.resizeRowsToContents()
 
     def accept_match(self, match_id):

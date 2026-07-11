@@ -1,0 +1,15 @@
+{
+  "bank_name": "Kotak Mahindra Bank",
+  "file_extensions": [".xlsx"],
+  "detect_column": "Transaction Date",
+  "header_search_rows": 25,
+  "date_dayfirst": true,
+  "columns": {
+    "date": "Transaction Date",
+    "description": "Description",
+    "reference": "Chq / Ref No.",
+    "amount": "Amount",
+    "dr_cr": "Dr / Cr",
+    "balance": "Balance"
+  }
+}

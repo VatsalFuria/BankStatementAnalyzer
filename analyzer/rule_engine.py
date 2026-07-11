@@ -3,17 +3,11 @@ import re
 
 from analyzer.database import get_connection, db_session
 from analyzer.config import DEFAULT_RULES_FILE
-from analyzer.constants import MatchOp, CategorySource, CategoryType, PAYMENT_MODE_KEYWORDS
+from analyzer.constants import MatchOp, CategorySource, CategoryType
 from analyzer.categories import set_category_type
 from analyzer.logging_config import logger
-from analyzer.database import db_session
-
-"""
-Inefficiencies, identified.. should be corrected if an easy fix, ignored till now.
-"""
 
 def load_rules():
-    """Return rules sorted by priority."""
     with db_session(commit=False) as conn:
         rows = conn.execute("SELECT * FROM rules ORDER BY priority ASC").fetchall()
     rules = []
@@ -26,13 +20,17 @@ def load_rules():
             except re.error:
                 logger.error("Invalid regex: %r", r["match_value"])
                 continue
-        
         rules.append(rule)
-
     return rules
 
 def test_rule(rule: dict, transaction: dict) -> bool:
     """Check if a single rule matches a transaction (row from DB)."""
+    # dr_cr is checked first: a rule scoped to DR or CR shouldn't even
+    # look at description/reference text if the direction doesn't match.
+    rule_dr_cr = rule['dr_cr']
+    if rule_dr_cr and transaction['dr_cr'] != rule_dr_cr:
+        return False
+
     match_field = rule['match_field']
     match_op = rule['match_op']
     match_value = rule['match_value']
@@ -47,7 +45,6 @@ def test_rule(rule: dict, transaction: dict) -> bool:
         return False
 
     text = str(text).upper()
-    # value = match_value.upper() Handled in load_rules()
 
     if match_op == MatchOp.CONTAINS.value:
         return match_value in text
@@ -63,11 +60,6 @@ def test_rule(rule: dict, transaction: dict) -> bool:
     return False
 
 def apply_rules(transaction_list=None):
-    """
-    Apply rules to all transactions (or a given list) and update categories.
-    Only updates rows where category_src != 'manual'.
-    Returns number of newly categorized rows.
-    """
     rules = load_rules()
     with db_session(commit=True) as conn:
 
@@ -75,16 +67,15 @@ def apply_rules(transaction_list=None):
             return 0
 
         if transaction_list is None:
-            # Re-apply rules to all non-manuall transactions
             txns = conn.execute("""
-                SELECT txn_id, description, bank, reference FROM transactions
+                SELECT txn_id, description, bank, reference, dr_cr FROM transactions
                 WHERE category IS NULL OR category_src != ?
             """, (CategorySource.MANUAL.value,)).fetchall()
         else:
             placeholders = ",".join("?" * len(transaction_list))
             txns = conn.execute(
                 f"""
-                SELECT txn_id, description, bank, reference
+                SELECT txn_id, description, bank, reference, dr_cr
                 FROM transactions
                 WHERE txn_id IN ({placeholders})
                 AND (category IS NULL OR category_src != ?)
@@ -107,7 +98,6 @@ def apply_rules(transaction_list=None):
     return count
 
 def reapply_all_rules():
-    """Resets rule-assigned categories and re-applies all rules, then re-applies manual overrides."""
     with db_session() as conn:
         conn.execute(
             "UPDATE transactions SET category=NULL, category_src=NULL, rule_id=NULL WHERE category_src=?",
@@ -129,11 +119,6 @@ def apply_manual_overrides():
 def add_manual_override(txn_id: int, category: str,
                          category_type: str = CategoryType.UNSPECIFIED.value,
                          reason: str | None = None):
-    """
-    Categorize a single transaction, independent of any rule. Used by the
-    Review tab's "just this transaction" option. Unlike a rule, this never
-    applies to any other transaction, even one with an identical description.
-    """
     with db_session() as conn:
         conn.execute("""
             INSERT INTO manual_overrides (txn_id, category, reason)
@@ -146,54 +131,46 @@ def add_manual_override(txn_id: int, category: str,
         set_category_type(category, category_type)
 
 def add_rule(priority, match_field, match_op, match_value, category,
-             category_type=None, source='manual'):
+             category_type=None, source='manual', dr_cr=None):
+    """dr_cr: None/'' = matches either direction, 'DR' or 'CR' scopes the
+    rule to only that direction (see constants.DrCr)."""
     with db_session() as conn:
         conn.execute("""
-            INSERT INTO rules (priority, match_field, match_op, match_value, category, category_type, source)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO rules (priority, match_field, match_op, match_value, category, category_type, source, dr_cr)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (priority, match_field, match_op, match_value, category,
-              category_type or CategoryType.UNSPECIFIED.value, source))
-    # category_types remains the authoritative lookup used by export.py's
-    # Income Summary (see the earlier discussion) — this INSERT just keeps
-    # rules.category_type from silently sitting at its default too.
+              category_type or CategoryType.UNSPECIFIED.value, source, dr_cr or None))
     if category_type:
         set_category_type(category, category_type)
 
 
-def merge_default_rules():
-    """
-    Insert any rule from default_rules.json not already present (matched
-    on match_field+match_op+match_value), leaving existing rules and
-    manual edits untouched. Lets a non-technical user treat the JSON file
-    as a living document: edit it, click 'Reload Defaults', and only new
-    or changed entries get added.
-    Returns the count of newly inserted rules.
-    """
-    definitions = _load_seed_rule_definitions()
-    with db_session(commit=False) as conn:
-        existing = conn.execute("SELECT match_field, match_op, match_value FROM rules").fetchall()
-    existing_keys = {(r["match_field"], r["match_op"], r["match_value"].upper()) for r in existing}
+# def merge_default_rules():
+#     """
+#     NOTE: dedup key intentionally stays (match_field, match_op, match_value)
+#     — NOT including dr_cr. If it included dr_cr, tightening an existing
+#     default rule's dr_cr in default_rules.json would create a *second*,
+#     near-duplicate rule alongside the old one already in someone's DB,
+#     rather than just being skipped. This keeps the existing "leave
+#     existing rules untouched" guarantee intact.
+#     """
+#     definitions = _load_seed_rule_definitions()
+#     with db_session(commit=False) as conn:
+#         existing = conn.execute("SELECT match_field, match_op, match_value FROM rules").fetchall()
+#     existing_keys = {(r["match_field"], r["match_op"], r["match_value"].upper()) for r in existing}
 
-    inserted = 0
-    for r in definitions:
-        key = (r["match_field"], r["match_op"], r["match_value"].upper())
-        if key in existing_keys:
-            continue
-        add_rule(r["priority"], r["match_field"], r["match_op"], r["match_value"],
-                  r["category"], category_type=r.get("category_type"), source='manual')
-        inserted += 1
-    logger.info(f"merge_default_rules: inserted {inserted} new rule(s)")
-    return inserted
+#     inserted = 0
+#     for r in definitions:
+#         key = (r["match_field"], r["match_op"], r["match_value"].upper())
+#         if key in existing_keys:
+#             continue
+#         add_rule(r["priority"], r["match_field"], r["match_op"], r["match_value"],
+#                   r["category"], category_type=r.get("category_type"),
+#                   source='manual', dr_cr=r.get("dr_cr"))
+#         inserted += 1
+#     logger.info(f"merge_default_rules: inserted {inserted} new rule(s)")
+#     return inserted
 
 def get_override_priority():
-    """
-    Returns a priority number lower than every existing rule, so a rule
-    created from the Review tab — which represents a specific, manually
-    confirmed match on a real transaction — always outranks broader
-    seeded rules (e.g. the generic NEFT/IMPS/UPI -> "Transfer" catch-alls).
-    Appending at MAX(priority)+1 instead would put new rules *after* those
-    catch-alls, where they'd never actually fire.
-    """
     conn = get_connection()
     row = conn.execute("SELECT MIN(priority) as min_priority FROM rules").fetchone()
     conn.close()
@@ -202,11 +179,6 @@ def get_override_priority():
 
 
 def _load_seed_rule_definitions():
-    """
-    Load the base rule set from JSON instead of hardcoding it in Python, so
-    non-developers can extend/localize merchant categorization without a
-    code change.
-    """
     try:
         with open(DEFAULT_RULES_FILE, "r", encoding="utf-8") as f:
             rules = json.load(f)
@@ -217,16 +189,6 @@ def _load_seed_rule_definitions():
         )
         rules = []
 
-    next_priority = max((r["priority"] for r in rules), default=0) + 1
-    for i, mode in enumerate(PAYMENT_MODE_KEYWORDS):
-        rules.append({
-            "priority": next_priority + i,
-            "match_field": "description",
-            "match_op": MatchOp.CONTAINS.value,
-            "match_value": mode,
-            "category": "Transfer",
-            "category_type": CategoryType.TRANSFER.value,
-        })
     return rules
 
 
@@ -235,5 +197,5 @@ def seed_default_rules():
         add_rule(
             r["priority"], r["match_field"], r["match_op"], r["match_value"],
             r["category"], category_type=r.get("category_type"),
-            source='manual',
+            source='manual', dr_cr=r.get("dr_cr"),
         )

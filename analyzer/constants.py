@@ -51,4 +51,4 @@ class CategoryType(str, Enum):
 # Payment modes recognized in transaction descriptions/references.
 # Shared by parsers (to tag payment_mode) and rule_engine (to seed matching
 # rules) so the two can't drift out of sync when a new mode is added.
-PAYMENT_MODE_KEYWORDS = ["NEFT", "IMPS", "UPI", "RTGS"]
+# PAYMENT_MODE_KEYWORDS = ["NEFT", "IMPS", "UPI", "RTGS"]

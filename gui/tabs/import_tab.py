@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox, QAbstractItemView, QListWidget, QMessageBox, QProgressDialog
 )
 
-from analyzer.rule_engine import apply_rules, merge_default_rules, seed_default_rules
+from analyzer.rule_engine import apply_rules, seed_default_rules
 from analyzer.database import reset_database
 from analyzer.transfer_matcher import find_transfers
 from analyzer.import_manager import import_file
@@ -149,10 +149,10 @@ class ImportTab(QWidget):
         action_grid.setHorizontalSpacing(12)
         self.reset_btn = make_button("Reset Database", width=180, height=34, destructive=True)
         self.reset_btn.clicked.connect(self.reset_database)
-        self.merge_rules_btn = make_button("Reload/Merge Default Rules", width=220, height=34)
-        self.merge_rules_btn.clicked.connect(self.merge_default_rules)
+        # self.merge_rules_btn = make_button("Reload/Merge Default Rules", width=220, height=34)
+        # self.merge_rules_btn.clicked.connect(self.merge_default_rules)
         action_grid.addWidget(self.reset_btn, 0, 0)
-        action_grid.addWidget(self.merge_rules_btn, 0, 1)
+        # action_grid.addWidget(self.merge_rules_btn, 0, 1)
         action_grid.setColumnStretch(2, 1)
         layout.addLayout(action_grid)
 
@@ -190,7 +190,7 @@ class ImportTab(QWidget):
         # and doubles as a visible "something is running" cue.
         self.btn.setEnabled(enabled)
         self.reset_btn.setEnabled(enabled)
-        self.merge_rules_btn.setEnabled(enabled)
+        # self.merge_rules_btn.setEnabled(enabled)
 
     def import_file(self):
 
@@ -254,17 +254,17 @@ class ImportTab(QWidget):
         for row in rows:
             self.file_list.addItem(row["filename"])
 
-    def merge_default_rules(self):
-        try:
-            count = merge_default_rules()
-            QMessageBox.information(self, "Rules reloaded",
-                f"{count} new rule(s) added from default_rules.json." if count
-                else "No new rules found — everything in the file is already loaded.")
-        except Exception as e:
-            logger.exception("merge_default_rules failed")
-            if self.status_bar:
-                self.status_bar.set_error(str(e))
-            QMessageBox.critical(self, "Error", str(e))
+    # def merge_default_rules(self):
+    #     try:
+    #         count = merge_default_rules()
+    #         QMessageBox.information(self, "Rules reloaded",
+    #             f"{count} new rule(s) added from default_rules.json." if count
+    #             else "No new rules found — everything in the file is already loaded.")
+    #     except Exception as e:
+    #         logger.exception("merge_default_rules failed")
+    #         if self.status_bar:
+    #             self.status_bar.set_error(str(e))
+    #         QMessageBox.critical(self, "Error", str(e))
 
     def reset_database(self):
         confirm = QMessageBox.question(
@@ -278,18 +278,19 @@ class ImportTab(QWidget):
         wipe_rules = QMessageBox.question(
             self, "Categorization rules",
             "Also erase your categorization rules and categories?\n"
+            "Note:\n"
             "Choose No to keep what you've built up so far.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         ) == QMessageBox.StandardButton.Yes
 
-        remove_files = QMessageBox.question(
-            self, "Remove input files",
-            "Also delete Excel/CSV files from the InputStatements folder?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        ) == QMessageBox.StandardButton.Yes
+        # remove_files = QMessageBox.question(
+        #     self, "Remove input files",
+        #     "Also delete Excel/CSV files from the InputStatements folder?",
+        #     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        # ) == QMessageBox.StandardButton.Yes
 
         try:
-            reset_database(remove_files=remove_files, wipe_rules=wipe_rules)
+            reset_database(remove_files=False, wipe_rules=wipe_rules)
             if wipe_rules:
                 seed_default_rules()
             self.refresh_imported_files()

@@ -8,7 +8,7 @@ A Python application for importing, categorizing, and analyzing bank statements 
 
 This tool helps you:
 
-- **Import** bank statements — currently XLSX/XLS (CSV parsing is not implemented yet; see "Extending the System")
+- **Import** bank statements — currently XLSX
 - **Categorize** transactions using customizable rules
 - **Detect** self-transfers between your accounts
 - **Consolidate** statements from multiple banks and accounts in one import batch, each with its own parser and account
@@ -22,7 +22,6 @@ This tool helps you:
 
 | File            | Role                                                                        |
 | --------------- | --------------------------------------------------------------------------- |
-| **main.py**     | CLI entry point for a single-file import demo                               |
 | **main_gui.py** | PySide6 GUI application with tabs for Import, Review, Transfers, and Export |
 | **setup_db.py** | Database initialization and default rules seeding script                    |
 
@@ -33,7 +32,7 @@ This tool helps you:
 | **analyzer/database.py**       | SQLite connection, schema init/migration, `db_session` context manager, and `reset_database()`                                |
 | **analyzer/models.py**         | `StandardTransaction` dataclass — the canonical format all parsers produce                                                    |
 | **analyzer/config.py**         | Centralized, env-overridable configuration (DB path, input folder, matching tolerances, etc.)                                 |
-| **analyzer/constants.py**      | Shared enums (`DrCr`, `CategorySource`, `MatchStatus`, `MatchOp`, `CategoryType`) and `PAYMENT_MODE_KEYWORDS`                 |
+| **analyzer/constants.py**      | Shared enums (`DrCr`, `CategorySource`, `MatchStatus`, `MatchOp`, `CategoryType`)                 |
 | **analyzer/exceptions.py**     | App-specific exception types (`ParserNotFoundError`, `ParseError`, `DuplicateImportError`) so the GUI can show clean messages |
 | **analyzer/logging_config.py** | Rotating file + console logger, also piped into the GUI status bar                                                            |
 | **analyzer/repository.py**     | Single place for read queries and simple status writes, used by the GUI                                                       |
@@ -97,7 +96,7 @@ This tool helps you:
 pip install -r requirements.txt
 ```
 
-### 3. Initialize Database & Rules
+### 3. Initialize Database & Rules (Optional)
 
 ```bash
 python setup_db.py
@@ -131,15 +130,6 @@ Other tabs:
 - **Transfers** — accept/reject auto-detected self-transfers
 - **Export** — save analyzed data to an Excel workbook
 
-### CLI Usage
-
-```bash
-python main.py
-```
-
-Single-file import/categorization demo (see `main.py` for current behavior — check that it also calls `apply_rules()`/`find_transfers()` if you want CLI output to match the GUI's automatic post-import steps).
-
----
 
 ## Database Schema
 
@@ -158,7 +148,7 @@ Most banks can be supported with just a JSON column mapping — no Python needed
 ```json
 {
   "bank_name": "MyBank",
-  "file_extensions": [".xlsx", ".xls"],
+  "file_extensions": [".xlsx"],
   "detect_column": "Description",
   "columns": {
     "date": "Txn Date",
@@ -184,9 +174,6 @@ class MyBankParser(ConfigurableExcelParser):
 
 It'll be auto-discovered and appear in each file's format dropdown on next launch.
 
-For statements with merged cells or shifting columns, copy `analyzer/parsers/example_custom_parser.py` instead and adapt it 
-
-**CSV support:** no CSV parser exists yet. To add one, implement `BaseParser.can_parse`/`parse` using `pd.read_csv` instead of `pd.read_excel`.
 
 ### Adding Custom Categorization Rules
 
@@ -194,11 +181,14 @@ For statements with merged cells or shifting columns, copy `analyzer/parsers/exa
 from analyzer.rule_engine import add_rule
 
 add_rule(
-    priority=11,
-    match_field='description',
-    match_op='contains',
-    match_value='NETFLIX',
-    category='Subscriptions'
+  priority=priority,
+  match_field="description",
+  match_op=result["match_op"],
+  match_value=result["match_value"],
+  category=result["category"],
+  category_type=result["category_type"],
+  source="manual",
+  dr_cr=result["dr_cr"],
 )
 ```
 
@@ -211,13 +201,4 @@ add_rule(
 - Regex rules (`match_op: "regex"`) have no validation in the GUI — an invalid pattern is silently treated as "no match" rather than surfaced as an error.
 - Rows with both withdrawal and deposit blank/zero are now skipped as likely balance/heading rows rather than imported as spurious 0-amount transactions — if your bank format legitimately has zero-amount transactions, this will drop them too.
 
----
 
-## Recent Fixes
-
-- **Duplicate-import detection** was comparing the wrong bank value and never actually caught re-imports of the same file; now keyed on filename + account.
-- **Example/template parser** (`example_custom_parser.py`) was showing up as a real, selectable bank format; currently ignored.
-- **Manual-override defaults** (`category_type="uncategorized"`, `reason="None"`) didn't match the app's enum or database null semantics; fixed to `CategoryType.UNSPECIFIED` and `None`.
-- **File picker** allowed selecting unsupported `.csv` and didn't allow `.xls`, despite HDFC's config declaring `.xls` support; filter now matches reality, and `xlrd` was added to `requirements.txt` for legacy `.xls` files.
-- **Export sheet generation** recomputed column widths by rescanning the whole worksheet once per column; now computed in a single pass. Empty sheets (e.g. no uncategorized transactions) are removed instead of left blank in the workbook.
-- **Import** now lets you assign a bank format and account **per file**, instead of one format/account for an entire multi-file batch — needed for importing several different banks' statements at once.
