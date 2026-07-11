@@ -13,6 +13,7 @@ class DrCr(str, Enum):
 class CategorySource(str, Enum):
     RULE = "rule"
     MANUAL = "manual"
+    TRANSFER = "transfer"
 
 
 class MatchStatus(str, Enum):

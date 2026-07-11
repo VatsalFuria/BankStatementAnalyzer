@@ -97,7 +97,7 @@ def generate_primary_savings():
         # both Withdrawal AND Deposit filled -> withdrawal silently wins
         ["2026-06-14", "DUPLICATE AMOUNT BOTH FIELDS TEST", "", "2026-06-14", 400, 300, 212275],
     ]
-    return _save(rows, "hdfc_primary_savings.xlsx")
+    return _save(rows, "PrimarySavings_hdfc_FYxxxx.xlsx")
 
 
 # --------------------------------------------------------------------------
@@ -123,7 +123,7 @@ def generate_secondary_current():
         ["2026-06-13", "ELECTRICITY BILL PAYMENT BSES", "", "2026-06-13", 2100, 0, 127781],
         ["2026-06-14", "FLIPKART ELECTRONICS SALE", "FKT100234", "2026-06-14", 3200, 0, 124581],
     ]
-    return _save(rows, "hdfc_secondary_current.xlsx")
+    return _save(rows, "SecendoryCurrent_hdfc_FYxxxx.xlsx")
 
 
 # --------------------------------------------------------------------------
@@ -148,7 +148,7 @@ def generate_business_account():
         ["2026-06-13", "FLIPKART OFFICE FURNITURE", "FKT778821", "2026-06-13", 12000, 0, 476800],
         ["2026-06-14", "CLIENT PAYMENT RECEIVED - INVOICE 2202", "", "2026-06-14", 0, 32000, 508800],
     ]
-    return _save(rows, "hdfc_business_account.xlsx")
+    return _save(rows, "Business_hdfc_FYxxxx.xlsx")
 
 
 # --------------------------------------------------------------------------
@@ -202,8 +202,8 @@ def generate_bulk_pair(n_per_account=400, seed=42):
     random.seed(seed)
     rows_2 = _rand_rows("bulk2", "BULKREF", slots_2)
 
-    p1 = _save(rows_1, "hdfc_bulk_account1.xlsx")
-    p2 = _save(rows_2, "hdfc_bulk_account2.xlsx")
+    p1 = _save(rows_1, "BulkAcc1_hdfc_FYxxxx.xlsx")
+    p2 = _save(rows_2, "BulkAcc2_hdfc_FYxxxx.xlsx")
     return p1, p2
 
 

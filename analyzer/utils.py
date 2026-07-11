@@ -1,3 +1,4 @@
+import os
 import re
 from analyzer.exceptions import ParseError
 
@@ -37,3 +38,23 @@ def parse_amount(raw, *, filepath=None, row=None, column=None) -> float:
                           filepath=filepath, row=row, column=column) from e
 
     return -value if negative else value
+
+
+def guess_import_defaults(filepath: str, parser_names: list[str]):
+    """Guess account and parser for file, based on filename. (filepath)
+    Assume default format to be AccountHolderName_BankName_FY25-26.xlsx
+    AccountHolderName -> default_account
+    BankName for parser, if in parser list."""
+
+    filename = os.path.splitext(os.path.basename(filepath))[0]
+    parts = filename.split("_")
+    if len(parts) < 2:
+        return None, None
+    account = parts[0].strip()
+    bank_lower = parts[1].strip().lower()
+    parser = None
+    for name in parser_names:
+        if bank_lower in name.lower() or name.lower() in bank_lower:
+            parser = name
+            break
+    return account, parser

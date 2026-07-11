@@ -5,7 +5,6 @@ got that category (rule match or manual override). This lets the
 Income Summary export include manually-categorized transactions too,
 not just ones assigned via a rule.
 """
-from analyzer.database import get_connection
 from analyzer.constants import CategoryType
 from analyzer.logging_config import logger
 from analyzer.database import db_session

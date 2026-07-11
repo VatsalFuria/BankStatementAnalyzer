@@ -150,8 +150,10 @@ def find_transfers(new_import_id: str | None = None, amount_tolerance: float | N
         match_id = str(uuid.uuid4())
         reason_text = "; ".join(reasons)
         match_rows.append((match_id, d_id, c_id, score, MatchStatus.SUGGESTED.value, reason_text))
-        debit_updates.append((match_id, d_id))
-        credit_updates.append((match_id, c_id))
+
+        debit_updates.append(("transfer", CategorySource.TRANSFER.value , match_id, d_id))
+        credit_updates.append(("transfer", CategorySource.TRANSFER.value , match_id, c_id))
+
         results.append({
             "match_id": match_id, "debit": row, "credit": row,
             "confidence": score, "reasons": reasons,
@@ -162,7 +164,7 @@ def find_transfers(new_import_id: str | None = None, amount_tolerance: float | N
             "INSERT INTO matches (match_id, debit_txn, credit_txn, confidence, status, reason) VALUES (?, ?, ?, ?, ?, ?)",
             match_rows,
         )
-        conn.executemany("UPDATE transactions SET match_id=? WHERE txn_id=?", debit_updates)
-        conn.executemany("UPDATE transactions SET match_id=? WHERE txn_id=?", credit_updates)
+        conn.executemany("UPDATE transactions SET category=?, category_src=?, match_id=? WHERE txn_id=?", debit_updates)
+        conn.executemany("UPDATE transactions SET category=?, category_src=?, match_id=? WHERE txn_id=?", credit_updates)
 
     return results

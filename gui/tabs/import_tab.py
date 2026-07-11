@@ -15,6 +15,7 @@ from analyzer.exceptions import BSAError
 from analyzer.logging_config import logger
 from analyzer.parsers import get_parser_choices
 from analyzer import repository
+from analyzer.utils import guess_import_defaults
 from gui.widgets import make_button
 
 AUTO_DETECT_LABEL = "Auto-detect (by column match)"
@@ -60,12 +61,18 @@ class FileImportSettingsDialog(QDialog):
             name_item.setToolTip(filepath)
             self.table.setItem(i, 0, name_item)
 
+            d_account, parser = guess_import_defaults(filepath, parser_names)
+            if d_account:
+                default_account = d_account
             account_edit = QLineEdit(default_account)
             self.table.setCellWidget(i, 1, account_edit)
             self.account_edits.append(account_edit)
 
             combo = QComboBox()
-            combo.addItem(AUTO_DETECT_LABEL)
+            if parser: 
+                combo.addItem(parser)
+            else:
+                combo.addItem(AUTO_DETECT_LABEL)
             for name in parser_names:
                 combo.addItem(name)
             self.table.setCellWidget(i, 2, combo)
@@ -110,8 +117,10 @@ class ImportWorker(QThread):
                 filepath = item["filepath"]
                 self.progress.emit(f"Importing {os.path.basename(filepath)} ({i}/{len(self.file_settings)})...")
                 fileImportId, fileTxnIds = import_file(filepath, account=item["account"], parser_name=item["parser_name"])
-                txn_ids.extend(fileTxnIds)
-                import_ids.extend(fileImportId)
+                if fileTxnIds: 
+                    txn_ids.extend(fileTxnIds)
+                if fileImportId : 
+                    import_ids.extend(fileImportId)
 
             self.progress.emit("Applying categorization rules...")
             categorized = apply_rules(txn_ids)

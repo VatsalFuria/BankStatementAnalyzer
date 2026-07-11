@@ -102,11 +102,6 @@ def init_db():
     CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
     """)
     conn.commit()
-
-    # Migrations for DBs created before dr_cr / reason existed.
-    _ensure_column(conn, "rules", "dr_cr", "TEXT")
-    _ensure_column(conn, "matches", "reason", "TEXT")
-    conn.commit()
     conn.close()
 
 
@@ -114,6 +109,7 @@ def reset_database(remove_files=False, wipe_rules=False):
     conn = get_connection()
     cursor = conn.cursor()
 
+    cursor.execute("UPDATE transactions SET match_id = NULL")
     cursor.execute("DELETE FROM manual_overrides")
     cursor.execute("DELETE FROM matches")
     cursor.execute("DELETE FROM transactions")
