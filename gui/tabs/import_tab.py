@@ -62,9 +62,7 @@ class FileImportSettingsDialog(QDialog):
             self.table.setItem(i, 0, name_item)
 
             d_account, parser = guess_import_defaults(filepath, parser_names)
-            if d_account:
-                default_account = d_account
-            account_edit = QLineEdit(default_account)
+            account_edit = QLineEdit(d_account or default_account)
             self.table.setCellWidget(i, 1, account_edit)
             self.account_edits.append(account_edit)
 
@@ -120,7 +118,7 @@ class ImportWorker(QThread):
                 if fileTxnIds: 
                     txn_ids.extend(fileTxnIds)
                 if fileImportId : 
-                    import_ids.extend(fileImportId)
+                    import_ids.append(fileImportId)
 
             self.progress.emit("Applying categorization rules...")
             categorized = apply_rules(txn_ids)

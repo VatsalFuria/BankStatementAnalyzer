@@ -13,13 +13,15 @@ def load_rules():
     rules = []
     for r in rows:
         rule = dict(r)
-        rule['match_value'] = rule['match_value'].upper()
         if(rule["match_op"]==MatchOp.REGEX.value):
             try:
                 re.compile(r["match_value"])
             except re.error:
                 logger.error("Invalid regex: %r", r["match_value"])
                 continue
+        else: 
+            rule['match_value'] = rule['match_value'].upper()
+            
         rules.append(rule)
     return rules
 
