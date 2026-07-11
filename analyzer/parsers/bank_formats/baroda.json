@@ -1,0 +1,15 @@
+{
+  "bank_name": "Bank of Baroda",
+  "file_extensions": [".xlsx"],
+  "detect_column": "NARRATION",
+  "header_search_rows": 20,
+  "date_dayfirst": true,
+  "columns": {
+    "date": "TRAN DATE",
+    "description": "NARRATION",
+    "reference": "CHQ.NO.",
+    "withdrawal": "WITHDRAWAL(DR)",
+    "deposit": "DEPOSIT(CR)",
+    "balance": "BALANCE(INR)"
+  }
+}

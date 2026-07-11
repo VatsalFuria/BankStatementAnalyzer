@@ -1,0 +1,15 @@
+{
+  "bank_name": "Central Bank of India",
+  "file_extensions": [".xlsx"],
+  "detect_column": "Account Description",
+  "header_search_rows": 20,
+  "date_dayfirst": true,
+  "columns": {
+    "date": "Post Date",
+    "description": "Account Description",
+    "reference": "Cheque\nNumber",
+    "withdrawal": "Debit",
+    "deposit": "Credit",
+    "balance": "Balance"
+  }
+}

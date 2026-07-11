@@ -1,0 +1,15 @@
+{
+  "bank_name": "ICICI Bank",
+  "file_extensions": [".xlsx"],
+  "detect_column": "Transaction Remarks",
+  "header_search_rows": 20,
+  "date_dayfirst": true,
+  "columns": {
+    "date": "Transaction Date",
+    "description": "Transaction Remarks",
+    "reference": "Cheque Number",
+    "withdrawal": "Withdrawal Amount(INR)",
+    "deposit": "Deposit Amount(INR)",
+    "balance": "Balance(INR)"
+  }
+}

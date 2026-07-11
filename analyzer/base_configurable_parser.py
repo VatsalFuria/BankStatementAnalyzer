@@ -105,13 +105,14 @@ class ConfigurableExcelParser(BaseParser):
                     dr_cr = DrCr.DEBIT.value if withdraw > 0 else DrCr.CREDIT.value
 
                 closing_raw = row.get(cols.get("balance", ""), None)
-                closing = closing_raw if pd.notna(closing_raw) else None
+                closing = (parse_amount(closing_raw, filepath=filepath, row=row_num, column=cols.get("balance"))
+                           if pd.notna(closing_raw) else None)
 
                 mode = None
                 transactions.append(StandardTransaction(
                     bank=bank_name, account="", txn_date=date, description=desc,
                     amount=float(amount), dr_cr=dr_cr,
-                    balance=float(closing) if closing else None,
+                    balance=closing,
                     reference=ref, payment_mode=mode,
                     source_file=filepath, source_row=row_num,
                 ))
