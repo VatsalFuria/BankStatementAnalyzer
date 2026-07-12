@@ -164,7 +164,7 @@ class ReviewTab(QWidget):
         self.table.setHorizontalHeaderLabels(
             ["ID", "Bank", "Account", "Date", "Description", "Amount", "DR/CR", "Action"]
         )
-        self.table.horizontalHeader().setStretchLastSection(True)
+        # self.table.horizontalHeader().setStretchLastSection(True)
 
         for i, row in enumerate(rows):
             for j, key in enumerate(row.keys()):
@@ -173,6 +173,8 @@ class ReviewTab(QWidget):
             btn = make_button("Categorize...", width=110, height=24, compact=True)
             btn.clicked.connect(lambda checked, r=row: self.open_categorize_dialog(r))
             self.table.setCellWidget(i, 7, btn)
+
+        self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
 
     def open_categorize_dialog(self, row):

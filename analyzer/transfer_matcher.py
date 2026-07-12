@@ -5,6 +5,9 @@ from difflib import SequenceMatcher
 from analyzer.database import db_session
 from analyzer.config import DEFAULT_AMOUNT_TOLERANCE
 from analyzer.constants import DrCr, MatchStatus, CategoryType, CategorySource
+from analyzer.categories import set_category_type
+
+Transfer_category = "transfer"
 
 # Below this combined score (0-100) we don't even suggest a match — same
 # date + same amount alone is too common a coincidence (rent, recurring
@@ -34,15 +37,15 @@ def _score_pair(row):
     score, reasons = 0, []
 
     if abs(row["debit_amount"] - row["credit_amount"]) < 0.01:
-        score += 35
+        score += 50
         reasons.append("exact amount match")
     else:
-        score += 20
+        score += 35
         reasons.append("amount within tolerance")
 
-    if row["debit_mode"] and row["credit_mode"] and row["debit_mode"] == row["credit_mode"]:
-        score += 25
-        reasons.append(f"same payment mode ({row['debit_mode']})")
+    # if row["debit_mode"] and row["credit_mode"] and row["debit_mode"] == row["credit_mode"]:
+    #     score += 25
+    #     reasons.append(f"same payment mode ({row['debit_mode']})")
 
     # Both txns share the txn_date already (by SQL join) — exclude the
     # date itself so a coincidentally-embedded date stamp doesn't get
@@ -52,7 +55,7 @@ def _score_pair(row):
              _tokens(row["credit_ref"], row["credit_desc"], exclude=date_variants)
 
     if shared:
-        score += 30
+        score += 40
         reasons.append(f"shared reference token(s): {', '.join(sorted(shared))[:60]}")
     else:
         sim = _description_similarity(row["debit_desc"], row["credit_desc"])
@@ -151,8 +154,8 @@ def find_transfers(new_import_id: str | None = None, amount_tolerance: float | N
         reason_text = "; ".join(reasons)
         match_rows.append((match_id, d_id, c_id, score, MatchStatus.SUGGESTED.value, reason_text))
 
-        debit_updates.append(("transfer", CategorySource.TRANSFER.value , match_id, d_id))
-        credit_updates.append(("transfer", CategorySource.TRANSFER.value , match_id, c_id))
+        debit_updates.append((Transfer_category, CategorySource.TRANSFER.value , match_id, d_id))
+        credit_updates.append((Transfer_category, CategorySource.TRANSFER.value , match_id, c_id))
 
         results.append({
             "match_id": match_id, "debit": row, "credit": row,
@@ -166,5 +169,7 @@ def find_transfers(new_import_id: str | None = None, amount_tolerance: float | N
         )
         conn.executemany("UPDATE transactions SET category=?, category_src=?, match_id=? WHERE txn_id=?", debit_updates)
         conn.executemany("UPDATE transactions SET category=?, category_src=?, match_id=? WHERE txn_id=?", credit_updates)
+    
+    set_category_type(Transfer_category, CategorySource.TRANSFER.value)
 
     return results

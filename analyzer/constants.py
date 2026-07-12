@@ -30,7 +30,13 @@ class MatchOp(str, Enum):
 
 
 class CategoryType(str, Enum):
-    """Groups categories for reporting (e.g. the Income Summary sheet)."""
+    """Groups categories for reporting (e.g. the Income Summary sheet) and,
+    increasingly, maps straight onto ITR schedules/sections. Values are
+    never renamed or removed once shipped — existing DBs store the string
+    value, so renaming would silently orphan old rows. New heads are only
+    ever appended.
+    """
+    # --- Original, generic buckets ----------------------------------------
     INCOME_DEFAULT = "income"
     INCOME_SALARY = "income_salary"
     INCOME_HOUSE = "income_house"
@@ -47,6 +53,22 @@ class CategoryType(str, Enum):
     PERSONAL_EXPENSE = "expense"
     TRANSFER = "transfer"
     UNSPECIFIED = "unspecified"
+
+    # --- Added: sharper ITR-head/section mapping ---------------------------
+    INCOME_DIVIDEND = "income_dividend"                  # Schedule OS — dividends, split out because they get their own advance-tax treatment
+    INTEREST_SAVINGS_80TTA = "interest_savings_80tta"    # Only savings-account interest qualifies for 80TTA/80TTB — FD interest doesn't
+    HOME_LOAN_INTEREST_24B = "home_loan_interest_24b"    # Section 24(b), set off against income_house (capped 2L for self-occupied)
+    HOME_LOAN_PRINCIPAL_80C = "home_loan_principal_80c"  # Sits inside the overall 80C cap — kept apart from generic 80C for clarity
+    NPS_SELF_80CCD1B = "nps_80ccd1b"                     # Additional 50k, over and above the 80C cap
+    RENT_PAID_HRA = "rent_paid_hra"                      # Feeds the HRA exemption calc — not a deduction by itself
+    CAPITAL_MARKET_PURCHASE = "capital_market_purchase"  # Stocks/MF/bonds bought — cost basis for a future capital gain, NOT a deduction
+    TAX_PAYMENT = "tax_payment"                          # Advance tax / self-assessment tax / GST challans
+    TAX_REFUND = "tax_refund"                            # IT refund principal — not taxable (interest on it is; see income_other_sources)
+    LOAN_PROCEEDS = "loan_proceeds"                      # Loan disbursement received — not income
+    LOAN_EMI = "loan_emi"                                # EMI outflow where the statement doesn't split principal/interest
+    CASH_WITHDRAWAL = "cash_withdrawal"                  # Cash-flow only
+    CREDIT_CARD_PAYMENT = "credit_card_payment"          # Cash-flow only — paying the bill isn't a second expense on top of the original spend
+    BANK_CHARGES = "bank_charges"                        # Cash-flow only, not tax-relevant
 
 
 # Payment modes recognized in transaction descriptions/references.
