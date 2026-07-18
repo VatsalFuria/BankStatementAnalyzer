@@ -1,20 +1,21 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QDialog,
-    QComboBox, QLineEdit, QRadioButton, QButtonGroup, QDialogButtonBox,
+    QLineEdit, QRadioButton, QButtonGroup, QDialogButtonBox,
     QTableWidget, QTableWidgetItem, QAbstractItemView, QMessageBox
 )
 
 from analyzer.rule_engine import add_rule, add_manual_override, get_override_priority, apply_rules
-from analyzer.categories import get_existing_categories
-from analyzer.constants import CategoryType, MatchOp, DrCr
 from analyzer import repository
 from gui.widgets import make_button
+from gui.rule_widgets import RuleFieldsWidget, DR_CR_LABELS_REVERSE
 
 
 class CategorizeDialog(QDialog):
     """
     Lets the user categorize a single uncategorized transaction, either
-    as a one-off (manual_overrides) or as a new rule (rules table).
+    as a one-off (manual_overrides) or as a new rule (rules table). The
+    match/category fields live in RuleFieldsWidget, shared with the Rules
+    tab's add/edit dialog.
     """
     def __init__(self, txn_row, parent=None):
         super().__init__(parent)
@@ -30,20 +31,10 @@ class CategorizeDialog(QDialog):
         desc_label.setStyleSheet("font-weight: 600;")
         layout.addWidget(desc_label)
 
-        form = QFormLayout()
-
-        self.category_combo = QComboBox()
-        self.category_combo.setEditable(True)
-        self.category_combo.addItems(get_existing_categories())
-        self.category_combo.setCurrentText("")
-        form.addRow("Category:", self.category_combo)
-
-        self.category_type_combo = QComboBox()
-        self.category_type_combo.addItems([t.value for t in CategoryType])
-        self.category_type_combo.setCurrentText(CategoryType.UNSPECIFIED.value)
-        form.addRow("Category type (for reports):", self.category_type_combo)
-
-        layout.addLayout(form)
+        self.fields = RuleFieldsWidget()
+        self.fields.match_value_edit.setText(txn_row["description"])
+        self.fields.dr_cr_combo.setCurrentText(DR_CR_LABELS_REVERSE.get(txn_row["dr_cr"], "Any"))
+        layout.addWidget(self.fields)
 
         scope_label = QLabel("Apply to:")
         scope_label.setStyleSheet("font-weight: 600; margin-top: 8px;")
@@ -57,23 +48,6 @@ class CategorizeDialog(QDialog):
         self.scope_group.addButton(self.radio_rule)
         layout.addWidget(self.radio_single)
         layout.addWidget(self.radio_rule)
-
-        rule_form = QFormLayout()
-        self.match_value_edit = QLineEdit(txn_row["description"])
-        rule_form.addRow("Match text:", self.match_value_edit)
-
-        self.match_op_combo = QComboBox()
-        self.match_op_combo.addItems([op.value for op in MatchOp])
-        self.match_op_combo.setCurrentText(MatchOp.CONTAINS.value)
-        rule_form.addRow("Match type:", self.match_op_combo)
-
-        self.dr_cr_combo = QComboBox()
-        self.dr_cr_combo.addItems(["Any", "DR only (debit)", "CR only (credit)"])
-        default_label = "DR only (debit)" if txn_row["dr_cr"] == DrCr.DEBIT.value else "CR only (credit)"
-        self.dr_cr_combo.setCurrentText(default_label)
-        rule_form.addRow("Applies to:", self.dr_cr_combo)
-
-        layout.addLayout(rule_form)
 
         hint = QLabel(
             "Tip: trim the match text down to a stable keyword (e.g. the "
@@ -99,35 +73,28 @@ class CategorizeDialog(QDialog):
 
     def _update_rule_fields_enabled(self):
         is_rule_scope = self.radio_rule.isChecked()
-        self.match_value_edit.setEnabled(is_rule_scope)
-        self.match_op_combo.setEnabled(is_rule_scope)
-        self.dr_cr_combo.setEnabled(is_rule_scope)
+        self.fields.match_value_edit.setEnabled(is_rule_scope)
+        self.fields.match_op_combo.setEnabled(is_rule_scope)
+        self.fields.dr_cr_combo.setEnabled(is_rule_scope)
         self.reason_edit.setEnabled(not is_rule_scope)
 
     def _on_accept(self):
-        category = self.category_combo.currentText().strip()
-        if not category:
+        is_rule_scope = self.radio_rule.isChecked()
+        if not self.fields.category_combo.currentText().strip():
             QMessageBox.warning(self, "Missing category", "Please enter a category name.")
             return
-
-        is_rule_scope = self.radio_rule.isChecked()
-        if is_rule_scope and not self.match_value_edit.text().strip():
+        if is_rule_scope and not self.fields.match_value_edit.text().strip():
             QMessageBox.warning(self, "Missing match text", "Please enter text to match on.")
             return
-        
-        dr_cr_map = {
-            "Any": None,
-            "DR only (debit)": DrCr.DEBIT.value,
-            "CR only (credit)": DrCr.CREDIT.value,
-        }
 
+        data = self.fields.to_dict()
         self.result_data = {
-            "category": category,
-            "category_type": self.category_type_combo.currentText(),
+            "category": data["category"],
+            "category_type": data["category_type"],
             "scope": "rule" if is_rule_scope else "single",
-            "match_value": self.match_value_edit.text().strip(),
-            "match_op": self.match_op_combo.currentText(),
-            "dr_cr": dr_cr_map[self.dr_cr_combo.currentText()] if is_rule_scope else None,
+            "match_value": data["match_value"] if is_rule_scope else None,
+            "match_op": data["match_op"] if is_rule_scope else None,
+            "dr_cr": data["dr_cr"] if is_rule_scope else None,
             "reason": self.reason_edit.text().strip() or None,
         }
         self.accept()
@@ -164,7 +131,6 @@ class ReviewTab(QWidget):
         self.table.setHorizontalHeaderLabels(
             ["ID", "Bank", "Account", "Date", "Description", "Amount", "DR/CR", "Action"]
         )
-        # self.table.horizontalHeader().setStretchLastSection(True)
 
         for i, row in enumerate(rows):
             for j, key in enumerate(row.keys()):

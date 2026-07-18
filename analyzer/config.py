@@ -17,6 +17,11 @@ DEFAULT_RULES_FILE = os.environ.get(
     os.path.join(os.path.dirname(__file__), "data", "default_rules.json"),
 )
 
+RULES_FILE = os.environ.get(
+    "BSA_RULES_FILE",
+    os.path.join(os.path.dirname(__file__), "data", "rules.json"),
+)
+
 # --- Import defaults -----------------------------------------------------
 DEFAULT_ACCOUNT = os.environ.get("BSA_DEFAULT_ACCOUNT", "Default_account")
 # None => parser-detected bank name is authoritative unless a caller
@@ -28,3 +33,6 @@ DEFAULT_BANK_OVERRIDE = os.environ.get("BSA_DEFAULT_BANK_OVERRIDE") or None
 DEFAULT_AMOUNT_TOLERANCE = float(os.environ.get("BSA_AMOUNT_TOLERANCE", "1.0"))
 CONFIDENCE_FULL_MATCH = int(os.environ.get("BSA_CONFIDENCE_FULL_MATCH", "100"))
 CONFIDENCE_PARTIAL_MATCH = int(os.environ.get("BSA_CONFIDENCE_PARTIAL_MATCH", "90"))
+
+# --- Rule suggestions ---------------------------------------------------
+RULE_SUGGESTION_MIN_OCCURRENCES = int(os.environ.get("BSA_RULE_SUGGESTION_MIN_OCCURRENCES", "3"))

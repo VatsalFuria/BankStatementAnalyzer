@@ -8,6 +8,7 @@ from gui.tabs.import_tab import ImportTab
 from gui.tabs.review_tab import ReviewTab
 from gui.tabs.transfer_tab import TransferTab
 from gui.tabs.export_tab import ExportTab
+from gui.tabs.rules_tab import RulesTab
 
 
 class MainWindow(QMainWindow):
@@ -29,11 +30,13 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tabs)
 
         self.import_tab = ImportTab(self.status)
+        self.rules_tab = RulesTab()
         self.review_tab = ReviewTab()
         self.transfer_tab = TransferTab()
         self.export_tab = ExportTab()
 
         self.tabs.addTab(self.import_tab, "Import")
+        self.tabs.addTab(self.rules_tab, "Rules")
         self.tabs.addTab(self.review_tab, "Review Uncategorized")
         self.tabs.addTab(self.transfer_tab, "Transfers")
         self.tabs.addTab(self.export_tab, "Export")
@@ -41,6 +44,10 @@ class MainWindow(QMainWindow):
         self.import_tab.imported.connect(self.review_tab.refresh)
         self.import_tab.imported.connect(self.transfer_tab.refresh)
         self.import_tab.imported.connect(self.export_tab.refresh)
+
+        self.rules_tab.rules_applied.connect(self.review_tab.refresh)
+        self.rules_tab.rules_applied.connect(self.transfer_tab.refresh)
+        self.rules_tab.rules_applied.connect(self.export_tab.refresh)
 
         self.tabs.currentChanged.connect(self._on_tab_changed)
 

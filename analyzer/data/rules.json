@@ -1,0 +1,1514 @@
+[
+  {
+    "priority": 1,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SALARY",
+    "category": "Salary",
+    "category_type": "income_salary",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 2,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PAYROLL",
+    "category": "Salary",
+    "category_type": "income_salary",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 3,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BONUS",
+    "category": "Bonus",
+    "category_type": "income_salary",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 4,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INCENTIVE",
+    "category": "Bonus",
+    "category_type": "income_salary",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 5,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "STIPEND",
+    "category": "Stipend",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 6,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PENSION",
+    "category": "Pension",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 7,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INT.PD",
+    "category": "Savings Interest",
+    "category_type": "interest_savings_80tta",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 8,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SAVINGS INTEREST",
+    "category": "Savings Interest",
+    "category_type": "interest_savings_80tta",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 9,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SB INT",
+    "category": "Savings Interest",
+    "category_type": "interest_savings_80tta",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 10,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "FD INT",
+    "category": "FD Interest",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 11,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TERM DEPOSIT INT",
+    "category": "FD Interest",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 12,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "RD INT",
+    "category": "RD Interest",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 13,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "DIVIDEND",
+    "category": "Dividend",
+    "category_type": "income_dividend",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 14,
+    "match_field": "description",
+    "match_op": "regex",
+    "match_value": "\\bRENT\\b",
+    "category": "Rental Income",
+    "category_type": "income_house",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 15,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CLIENT PAYMENT",
+    "category": "Business Income",
+    "category_type": "income_pgbp",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 16,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CONSULTING FEE",
+    "category": "Professional Income",
+    "category_type": "income_pgbp",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 17,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PROFESSIONAL FEE",
+    "category": "Professional Income",
+    "category_type": "income_pgbp",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 18,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "FREELANCE",
+    "category": "Freelance Income",
+    "category_type": "income_pgbp",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 19,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INVOICE",
+    "category": "Business Income",
+    "category_type": "income_pgbp",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 20,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MF REDEMPTION",
+    "category": "Mutual Fund Redemption",
+    "category_type": "income_capital_gains",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 21,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "REDEMPTION",
+    "category": "Capital Gains",
+    "category_type": "income_capital_gains",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 22,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ZERODHA",
+    "category": "Capital Gains",
+    "category_type": "income_capital_gains",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 23,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "GROWW",
+    "category": "Capital Gains",
+    "category_type": "income_capital_gains",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 24,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "UPSTOX",
+    "category": "Capital Gains",
+    "category_type": "income_capital_gains",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 25,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ICICIDIRECT",
+    "category": "Capital Gains",
+    "category_type": "income_capital_gains",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 26,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ANGEL ONE",
+    "category": "Capital Gains",
+    "category_type": "income_capital_gains",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 27,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INCOME TAX REFUND",
+    "category": "IT Refund",
+    "category_type": "tax_refund",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 28,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "REFUND ITR",
+    "category": "IT Refund",
+    "category_type": "tax_refund",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 29,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CPC REFUND",
+    "category": "IT Refund",
+    "category_type": "tax_refund",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 30,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INTEREST ON REFUND",
+    "category": "Interest on IT Refund",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 31,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "GIFT",
+    "category": "Gift Received",
+    "category_type": "gift_received",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 32,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "LOAN DISBURS",
+    "category": "Loan Received",
+    "category_type": "loan_proceeds",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 33,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "LOAN RECEIVED FROM FRIEND",
+    "category": "Friendly Loan Received",
+    "category_type": "friendly_loan",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 34,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "POLICY MATURITY",
+    "category": "Insurance Maturity",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 35,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "LIC MATURITY",
+    "category": "Insurance Maturity",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 36,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "LIC PREMIUM",
+    "category": "Life Insurance Premium",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 37,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "LIC OF INDIA",
+    "category": "Life Insurance Premium",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 38,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "LIFE INSURANCE PREMIUM",
+    "category": "Life Insurance Premium",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 39,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PPF",
+    "category": "PPF Contribution",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 40,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SUKANYA SAMRIDDHI",
+    "category": "Sukanya Samriddhi",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 41,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "NSC",
+    "category": "NSC Investment",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 42,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ELSS",
+    "category": "ELSS Mutual Fund",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 43,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TAX SAVER FD",
+    "category": "Tax Saver FD",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 44,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TAX SAVING FD",
+    "category": "Tax Saver FD",
+    "category_type": "investment_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 45,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HOME LOAN PRINCIPAL",
+    "category": "Home Loan Principal",
+    "category_type": "home_loan_principal_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 46,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HL PRINCIPAL",
+    "category": "Home Loan Principal",
+    "category_type": "home_loan_principal_80c",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 47,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HOME LOAN INTEREST",
+    "category": "Home Loan Interest",
+    "category_type": "home_loan_interest_24b",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 48,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HOME LOAN INT",
+    "category": "Home Loan Interest",
+    "category_type": "home_loan_interest_24b",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 49,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HL INT",
+    "category": "Home Loan Interest",
+    "category_type": "home_loan_interest_24b",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 50,
+    "match_field": "description",
+    "match_op": "regex",
+    "match_value": "\\bNPS\\b",
+    "category": "NPS Contribution",
+    "category_type": "nps_80ccd1b",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 51,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "NATIONAL PENSION",
+    "category": "NPS Contribution",
+    "category_type": "nps_80ccd1b",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 52,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HEALTH INSURANCE",
+    "category": "Health Insurance Premium",
+    "category_type": "health_insurance_80d",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 53,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MEDICLAIM",
+    "category": "Health Insurance Premium",
+    "category_type": "health_insurance_80d",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 54,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "STAR HEALTH",
+    "category": "Health Insurance Premium",
+    "category_type": "health_insurance_80d",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 55,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HDFC ERGO",
+    "category": "Health Insurance Premium",
+    "category_type": "health_insurance_80d",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 56,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "NIVA BUPA",
+    "category": "Health Insurance Premium",
+    "category_type": "health_insurance_80d",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 57,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CARE HEALTH",
+    "category": "Health Insurance Premium",
+    "category_type": "health_insurance_80d",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 58,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MEDI ASSIST",
+    "category": "Health Insurance Premium",
+    "category_type": "health_insurance_80d",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 59,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "EDUCATION LOAN",
+    "category": "Education Loan Interest",
+    "category_type": "education_loan_80e",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 60,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "DONATION",
+    "category": "Donation",
+    "category_type": "donation_80g",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 61,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PM CARES",
+    "category": "Donation",
+    "category_type": "donation_80g",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 62,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PMNRF",
+    "category": "Donation",
+    "category_type": "donation_80g",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 63,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CM RELIEF FUND",
+    "category": "Donation",
+    "category_type": "donation_80g",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 64,
+    "match_field": "description",
+    "match_op": "regex",
+    "match_value": "\\bRENT\\b",
+    "category": "House Rent Paid",
+    "category_type": "rent_paid_hra",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 65,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "GIFT",
+    "category": "Gift Given",
+    "category_type": "gift_given",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 66,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "LOAN GIVEN TO FRIEND",
+    "category": "Friendly Loan Given",
+    "category_type": "friendly_loan",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 67,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ZERODHA",
+    "category": "Capital Market Investment",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 68,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "GROWW",
+    "category": "Capital Market Investment",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 69,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "UPSTOX",
+    "category": "Capital Market Investment",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 70,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ICICIDIRECT",
+    "category": "Capital Market Investment",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 71,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ANGEL ONE",
+    "category": "Capital Market Investment",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 72,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MUTUAL FUND",
+    "category": "Mutual Fund Purchase",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 73,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MF PURCHASE",
+    "category": "Mutual Fund Purchase",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 74,
+    "match_field": "description",
+    "match_op": "regex",
+    "match_value": "\\bSIP\\b",
+    "category": "SIP Investment",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 75,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "DEMAT",
+    "category": "Demat / Stock Purchase",
+    "category_type": "capital_market_purchase",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 76,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "GST ON CHARGES",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 77,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INCOME TAX",
+    "category": "Income Tax Payment",
+    "category_type": "tax_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 78,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ADVANCE TAX",
+    "category": "Advance Tax Payment",
+    "category_type": "tax_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 79,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SELF ASSESSMENT TAX",
+    "category": "Self-Assessment Tax",
+    "category_type": "tax_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 80,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TIN NSDL",
+    "category": "Tax Payment",
+    "category_type": "tax_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 81,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CHALLAN",
+    "category": "Tax Payment",
+    "category_type": "tax_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 82,
+    "match_field": "description",
+    "match_op": "regex",
+    "match_value": "\\bGST\\b",
+    "category": "GST Payment",
+    "category_type": "tax_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 83,
+    "match_field": "description",
+    "match_op": "regex",
+    "match_value": "\\bEMI\\b",
+    "category": "Loan EMI",
+    "category_type": "loan_emi",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 84,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HOME LOAN EMI",
+    "category": "Home Loan EMI",
+    "category_type": "loan_emi",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 85,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CAR LOAN",
+    "category": "Car Loan EMI",
+    "category_type": "loan_emi",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 86,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PERSONAL LOAN",
+    "category": "Personal Loan EMI",
+    "category_type": "loan_emi",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 87,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SMS CHARGES",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 88,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "AMB CHARGES",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 89,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ATM CHARGES",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 90,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MIN BAL CHARGES",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 91,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MINIMUM BALANCE CHARGES",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 92,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PENAL CHARGES",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 93,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CHEQUE BOUNCE",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 94,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ANNUAL MAINTENANCE",
+    "category": "Bank Charges",
+    "category_type": "bank_charges",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 95,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ATM",
+    "category": "Cash Withdrawal",
+    "category_type": "cash_withdrawal",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 96,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CASH WDL",
+    "category": "Cash Withdrawal",
+    "category_type": "cash_withdrawal",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 97,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CSH WDL",
+    "category": "Cash Withdrawal",
+    "category_type": "cash_withdrawal",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 98,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CASH WITHDRAWAL",
+    "category": "Cash Withdrawal",
+    "category_type": "cash_withdrawal",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 99,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CASH DEPOSIT",
+    "category": "Cash Deposit",
+    "category_type": "unspecified",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 100,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CASH DEP",
+    "category": "Cash Deposit",
+    "category_type": "unspecified",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": 101,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CREDIT CARD PAYMENT",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 102,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CRED CARD",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 103,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CC PAYMENT",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 104,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SBI CARD",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 105,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HDFC CREDIT CARD",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 106,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ICICI CREDIT CARD",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 107,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "AXIS CREDIT CARD",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 108,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "AMEX",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 109,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BILLDESK",
+    "category": "Credit Card Bill Payment",
+    "category_type": "credit_card_payment",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 110,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "AMAZON PRIME",
+    "category": "Subscriptions",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 111,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "NETFLIX",
+    "category": "Subscriptions",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 112,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HOTSTAR",
+    "category": "Subscriptions",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 113,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SPOTIFY",
+    "category": "Subscriptions",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 114,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SONY LIV",
+    "category": "Subscriptions",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 115,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "YOUTUBE PREMIUM",
+    "category": "Subscriptions",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 116,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "APPLE.COM/BILL",
+    "category": "Subscriptions",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 117,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SWIGGY",
+    "category": "Food",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 118,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ZOMATO",
+    "category": "Food",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 119,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "AMAZON",
+    "category": "Shopping",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 120,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "FLIPKART",
+    "category": "Shopping",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 121,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MYNTRA",
+    "category": "Shopping",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 122,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "AJIO",
+    "category": "Shopping",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 123,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "NYKAA",
+    "category": "Shopping",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 124,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BIGBASKET",
+    "category": "Groceries",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 125,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BLINKIT",
+    "category": "Groceries",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 126,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ZEPTO",
+    "category": "Groceries",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 127,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "DMART",
+    "category": "Groceries",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 128,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BSES",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 129,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ELECTRICITY BILL",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 130,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TATA POWER",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 131,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TORRENT POWER",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 132,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ADANI ELECTRICITY",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 133,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INDANE",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 134,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HP GAS",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 135,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BHARAT GAS",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 136,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "AIRTEL",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 137,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "JIO",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 138,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "VODAFONE",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 139,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "ACT FIBERNET",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 140,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TATA SKY",
+    "category": "Utilities",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 141,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PETROL",
+    "category": "Fuel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 142,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INDIAN OIL",
+    "category": "Fuel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 143,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BPCL",
+    "category": "Fuel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 144,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HP PETROL",
+    "category": "Fuel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 145,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SHELL",
+    "category": "Fuel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 146,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "IRCTC",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 147,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MAKEMYTRIP",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 148,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "GOIBIBO",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 149,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "YATRA",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 150,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "INDIGO",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 151,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "UBER",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 152,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "OLA",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 153,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "RAPIDO",
+    "category": "Travel",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 154,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "PHARMACY",
+    "category": "Medical",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 155,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "APOLLO PHARMACY",
+    "category": "Medical",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 156,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "MEDPLUS",
+    "category": "Medical",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 157,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "HOSPITAL",
+    "category": "Medical",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 158,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "DIAGNOSTIC",
+    "category": "Medical",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 159,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SCHOOL FEE",
+    "category": "Education",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 160,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "TUITION FEE",
+    "category": "Education",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 161,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "COLLEGE FEE",
+    "category": "Education",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 162,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "CAR INSURANCE",
+    "category": "Insurance (Non-deductible)",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 163,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BIKE INSURANCE",
+    "category": "Insurance (Non-deductible)",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 164,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "VEHICLE INSURANCE",
+    "category": "Insurance (Non-deductible)",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 165,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "NEFT",
+    "category": "Transfer",
+    "category_type": "transfer",
+    "dr_cr": null
+  },
+  {
+    "priority": 166,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "IMPS",
+    "category": "Transfer",
+    "category_type": "transfer",
+    "dr_cr": null
+  },
+  {
+    "priority": 167,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "UPI",
+    "category": "Transfer",
+    "category_type": "transfer",
+    "dr_cr": null
+  },
+  {
+    "priority": 168,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "RTGS",
+    "category": "Transfer",
+    "category_type": "transfer",
+    "dr_cr": null
+  }
+]
