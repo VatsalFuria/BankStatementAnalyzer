@@ -8,7 +8,7 @@ from analyzer.rule_engine import add_rule, add_manual_override, get_override_pri
 from analyzer import repository
 from gui.widgets import make_button
 from gui.rule_widgets import RuleFieldsWidget, DR_CR_LABELS_REVERSE
-
+from analyzer.export import get_export_summary
 from gui.table_find import attach_find_bar
 
 class CategorizeDialog(QDialog):
@@ -118,6 +118,10 @@ class ReviewTab(QWidget):
         header_row.addWidget(self.refresh_btn)
         layout.addLayout(header_row)
 
+        self.summary_label = QLabel()
+        self.summary_label.setObjectName("exportSummary")
+        layout.addWidget(self.summary_label)
+
         self.table = QTableWidget()
         self.table.setAlternatingRowColors(True)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -127,6 +131,13 @@ class ReviewTab(QWidget):
 
     def refresh(self):
         rows = repository.get_uncategorized_transactions()
+
+        summary = get_export_summary()
+        self.summary_label.setText(
+            f"{summary['total_transactions']} transactions • "
+            f"{summary['uncategorized']} uncategorized • "
+            f"{summary['accepted_transfers']} accepted transfers"
+        )
 
         self.table.setRowCount(len(rows))
         self.table.setColumnCount(8)

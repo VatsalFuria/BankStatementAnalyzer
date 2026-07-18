@@ -9,9 +9,9 @@ Review tab already use, only after a human confirms the category.
 import re
 from collections import Counter
 
-from analyzer.database import db_session
 from analyzer.config import RULE_SUGGESTION_MIN_OCCURRENCES
 from analyzer.rule_engine import load_rules, test_rule
+from analyzer.repository import get_uncategorized_transactions
 
 # Merchant-like words only — numbers and short reference fragments aren't
 # useful rule anchors on their own.
@@ -22,20 +22,12 @@ _STOPWORDS = {
 }
 
 
-def _get_uncategorized():
-    with db_session(commit=False) as conn:
-        return conn.execute("""
-            SELECT txn_id, description, dr_cr FROM transactions
-            WHERE category IS NULL OR category=''
-        """).fetchall()
-
-
 def suggest_rules(min_occurrences: int = RULE_SUGGESTION_MIN_OCCURRENCES):
     """Returns suggestion dicts — {token, count, dr_cr, samples,
     suggested_category} — sorted by how many uncategorized transactions
     each would cover. dr_cr is None ('Any') unless one direction
     overwhelmingly dominates."""
-    txns = _get_uncategorized()
+    txns = get_uncategorized_transactions()
     if not txns:
         return []
 

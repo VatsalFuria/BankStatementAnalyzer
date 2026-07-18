@@ -291,10 +291,10 @@ def import_rules_from_json(filepath: str, mode: str = "merge") -> int:
 
 def get_override_priority():
     conn = get_connection()
-    row = conn.execute("SELECT MIN(priority) as min_priority FROM rules").fetchone()
+    row = conn.execute("SELECT MAX(priority) as max_priority FROM rules").fetchone()
     conn.close()
-    current_min = row["min_priority"] if row["min_priority"] is not None else 1
-    return current_min - 1
+    current_min = row["max_priority"] if row["max_priority"] is not None else 1
+    return current_min + 1
 
 
 def _load_seed_rule_definitions():

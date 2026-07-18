@@ -1,5 +1,32 @@
 [
   {
+    "priority": -2,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "SASKEN",
+    "category": "Dividend Sasken",
+    "category_type": "income_other_sources",
+    "dr_cr": "CR"
+  },
+  {
+    "priority": -1,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BBPS/Mahanagar",
+    "category": "Gas bill",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
+    "priority": 0,
+    "match_field": "description",
+    "match_op": "contains",
+    "match_value": "BBPS/MAHARASHTR",
+    "category": "Electricity Bill",
+    "category_type": "expense",
+    "dr_cr": "DR"
+  },
+  {
     "priority": 1,
     "match_field": "description",
     "match_op": "contains",
@@ -1476,39 +1503,12 @@
     "dr_cr": "DR"
   },
   {
-    "priority": 165,
+    "priority": 169,
     "match_field": "description",
     "match_op": "contains",
-    "match_value": "NEFT",
-    "category": "Transfer",
-    "category_type": "transfer",
-    "dr_cr": null
-  },
-  {
-    "priority": 166,
-    "match_field": "description",
-    "match_op": "contains",
-    "match_value": "IMPS",
-    "category": "Transfer",
-    "category_type": "transfer",
-    "dr_cr": null
-  },
-  {
-    "priority": 167,
-    "match_field": "description",
-    "match_op": "contains",
-    "match_value": "UPI",
-    "category": "Transfer",
-    "category_type": "transfer",
-    "dr_cr": null
-  },
-  {
-    "priority": 168,
-    "match_field": "description",
-    "match_op": "contains",
-    "match_value": "RTGS",
-    "category": "Transfer",
-    "category_type": "transfer",
-    "dr_cr": null
+    "match_value": "MIN BAL CHRGS",
+    "category": "Bank Charges",
+    "category_type": "expense",
+    "dr_cr": "DR"
   }
 ]
