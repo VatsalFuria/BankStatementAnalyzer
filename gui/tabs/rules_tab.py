@@ -14,6 +14,8 @@ from analyzer.exceptions import BSAError
 from gui.widgets import make_button
 from gui.rule_widgets import RuleEditDialog
 
+from gui.table_find import attach_find_bar
+
 RULE_COLUMNS = ["Priority", "Field", "Op", "Match Value", "Category",
                 "Category Type", "Applies To", "Source", "Actions"]
 APPLIES_TO_LABELS = {None: "Any", "DR": "Debit", "CR": "Credit"}
@@ -63,11 +65,20 @@ class RulesTab(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         layout.addWidget(self.table)
+        self.finder = attach_find_bar(self, layout, self.table)
 
+        suggestions_header = QHBoxLayout()
         self.suggestions_label = QLabel("Suggested Rules (from uncategorized transactions)")
         self.suggestions_label.setStyleSheet("font-weight: 600; margin-top: 8px;")
         self.suggestions_label.hide()
-        layout.addWidget(self.suggestions_label)
+        suggestions_header.addWidget(self.suggestions_label)
+        suggestions_header.addStretch()
+
+        self.close_suggestions_btn = make_button("Close", width=70, height=24, compact=True)
+        self.close_suggestions_btn.clicked.connect(self.close_suggestions)
+        self.close_suggestions_btn.hide()
+        suggestions_header.addWidget(self.close_suggestions_btn)
+        layout.addLayout(suggestions_header)
 
         self.suggestions_table = QTableWidget()
         self.suggestions_table.setAlternatingRowColors(True)
@@ -78,6 +89,7 @@ class RulesTab(QWidget):
         self.suggestions_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.suggestions_table.hide()
         layout.addWidget(self.suggestions_table)
+        # self.finder2 = attach_find_bar(self, layout, self.suggestions_table)
 
         self.refresh()
 
@@ -99,6 +111,15 @@ class RulesTab(QWidget):
             self.table.setCellWidget(i, 8, self._build_action_widget(row, i, len(rows)))
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
+
+        self.finder.refresh_search()
+
+        # Keep the suggestions panel in sync: if it's currently open,
+        # re-mine uncategorized transactions so a just-approved (or
+        # otherwise now-covered) suggestion drops off the list instead of
+        # sitting there stale until the user clicks "Suggest Rules" again.
+        if self.suggestions_table.isVisible():
+            self._populate_suggestions()
 
     def _build_action_widget(self, row, index, total):
         widget = QWidget()
@@ -213,14 +234,34 @@ class RulesTab(QWidget):
     # Suggestions (from uncategorized transactions)
     # ------------------------------------------------------------------
     def show_suggestions(self):
-        suggestions = suggest_rules()
         self.suggestions_label.show()
         self.suggestions_table.show()
+        self.close_suggestions_btn.show()
+        self._populate_suggestions(notify_if_empty=True)
+        # self.finder2.refresh_search()
+
+    def close_suggestions(self):
+        """Hides the panel and drops its (now stale) rows, so re-opening
+        it always starts from a fresh suggest_rules() call rather than
+        showing leftover data from before it was closed."""
+        self.suggestions_label.hide()
+        self.suggestions_table.hide()
+        self.close_suggestions_btn.hide()
+        self.suggestions_table.setRowCount(0)
+
+    def _populate_suggestions(self, notify_if_empty=False):
+        """Runs suggest_rules() and rebuilds the table. Used both by the
+        explicit 'Suggest Rules' button and by refresh() (e.g. right
+        after a suggestion is approved), which is why the empty-result
+        popup is opt-in — refresh() shouldn't nag the user with a dialog
+        every time the list happens to empty out on its own."""
+        suggestions = suggest_rules()
 
         if not suggestions:
             self.suggestions_table.setRowCount(0)
-            QMessageBox.information(self, "No suggestions",
-                                     "No repeated, unmatched keywords found in the uncategorized transactions.")
+            if notify_if_empty:
+                QMessageBox.information(self, "No suggestions",
+                                         "No repeated, unmatched keywords found in the uncategorized transactions.")
             return
 
         self.suggestions_table.setRowCount(len(suggestions))

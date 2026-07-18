@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
 )
 from analyzer import repository
 from gui.widgets import make_button
+from gui.table_find import attach_find_bar
 
 
 class TransferTab(QWidget):
@@ -30,6 +31,7 @@ class TransferTab(QWidget):
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         layout.addWidget(self.table)
+        self.finder = attach_find_bar(self, layout, self.table)
 
         self.refresh()
 
@@ -60,6 +62,7 @@ class TransferTab(QWidget):
             action_layout.addWidget(btn_reject)
             self.table.setCellWidget(i, 8, action_widget)
         self.table.resizeRowsToContents()
+        self.finder.refresh_search()
 
     def accept_match(self, match_id):
         repository.accept_match(match_id)

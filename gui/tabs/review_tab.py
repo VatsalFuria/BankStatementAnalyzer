@@ -9,6 +9,7 @@ from analyzer import repository
 from gui.widgets import make_button
 from gui.rule_widgets import RuleFieldsWidget, DR_CR_LABELS_REVERSE
 
+from gui.table_find import attach_find_bar
 
 class CategorizeDialog(QDialog):
     """
@@ -121,6 +122,7 @@ class ReviewTab(QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         layout.addWidget(self.table)
+        self.finder = attach_find_bar(self, layout, self.table)
         self.refresh()
 
     def refresh(self):
@@ -142,6 +144,8 @@ class ReviewTab(QWidget):
 
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
+
+        self.finder.refresh_search()
 
     def open_categorize_dialog(self, row):
         dialog = CategorizeDialog(row, self)
